@@ -65,24 +65,24 @@ uint8_t* __getPhysicalInterruptionPort(enum InterruptionPort port)
 	}
 }
 
-void __setupInterruptionPort(InterruptionPort interrupt_port)
+void __setupInterruptionPort(enum InterruptionPort interrupt_port)
 {
 	SET_BIT_AT(PCICR,interrupt_port);
 }
 
 void __enableInterruptPin(InterruptionRealPort interrupt_real_port,size_t pin)
 {
-	SET_BIT_AT(*interrupt_port,pin);
+	SET_BIT_AT(*interrupt_real_port,pin);
 }
 
-void setupBasicInterrupt(InterruptionPort interrupt_port,size_t pin)
+void setupBasicInterrupt(enum InterruptionPort interrupt_port,size_t pin)
 {
 	uint8_t* real_port = __getPhysicalInterruptionPort(interrupt_port);
 	__enableInterruptPin(real_port,pin);
 	__setupInterruptionPort(interrupt_port);
 }
 
-void __setupBasicInterrupts(InterruptionPort interrupt_port,size_t pins_count,...)
+void __setupBasicInterrupts(enum InterruptionPort interrupt_port,size_t pins_count,...)
 {
 	va_list valist;
 	va_start(valist,pins_count);
