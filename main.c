@@ -15,6 +15,7 @@
 #include <util/atomic.h>
 #include "ports.h"
 #include "external_interrupt.h"
+#include "timer.h"
 
 volatile LCD_State lcd;
 volatile int counter = 0;
@@ -29,8 +30,23 @@ advancedInterruptPin2PortD
 	}	
 }
 
+ISR(TIMER0_COMPA_vect)
+{
+	if(isPinLow(PORT_STATE(D),4))
+		enablePin(PORT_STATE(D),4);
+	else disablePin(PORT_STATE(D),4);
+} 
+
+ISR(TIMER0_OVF_vect)
+{
+	if(isPinLow(PORT_STATE(D),4))
+		enablePin(PORT_STATE(D),4);
+	else disablePin(PORT_STATE(D),4);
+}
+
 int main(void)
 {
+	/*
 	I2C_init();
 
 	lcd.address = 0x27 << 1;
@@ -46,11 +62,18 @@ int main(void)
 	setPinAsInput(&info,PullUp,2);//tu nie musi byæ pullup,gdy¿ jest wy¿ej
 	
 	setupAdvancedInterrupt(Pin2PortDAdvancedInterrupt,ActivatedByFallingEdge);
-
+	*/
+	//TCCR0A=(_BV(COM0A0) | _BV(COM0B0));
+	//TCCR0B |= _BV(FOC0A);
+	//OCR1A=F_CPU/2024/1;
+	//OCR0A = 50;
+	//TCCR0B |=_BV(WGM02) | _BV(CS02) | _BV(CS00); // Preskaler 1024, CTC
+	setupTimer0(TimerPrescaler1024,Timer0Normal,Timer0Overflow,TimerNotControlPin,None,128);
+	setPinsAsOutput(PORT_CONFIG(D),6,5,4);
 	enableInterrupts();
     while (1) 
     {
-
+		
     }
 }
 

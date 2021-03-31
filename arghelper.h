@@ -10,6 +10,7 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define PP_NARG(...) \
 PP_NARG_(__VA_ARGS__,PP_RSEQ_N())
