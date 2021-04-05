@@ -21,6 +21,7 @@
 #define CLEAR_BIT_AT(target,pos) ( target &= ~BIT_MASK_OF(pos)  )
 
 #define WIPE_REGISTER(target) target = 0x0
+#define REPLACE_REGISTER(target,value) target = value
  
 #define SHIFT_MASK(target,shift) ( mask =<< shift ) 
 #define SET_SHIFTED_BIT_MASK(target,mask,shift) ( target |= ( mask << shift ) ) 
