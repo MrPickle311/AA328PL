@@ -18,12 +18,15 @@ typedef uint8_t byte_t;
 
 typedef uint8_t length_t;
 
+typedef uint8_t address_t;
+
 enum OperationStatus
 {
 	Success,
 	Failure
 };
 
-
+#define for_N(iterator_name,count_to)\
+		for(uint8_t iterator_name = 0; iterator_name < count_to ;++iterator_name)
 
 #endif /* GLOBAL_UTILS_H_ */

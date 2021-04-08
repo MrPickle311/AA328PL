@@ -10,7 +10,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "i2c_lib.h"
+//#include "i2c_lib.h"
+#include "twi.h"
 #include <stdlib.h>
 #include <util/delay.h>
 
@@ -54,18 +55,20 @@ void LCD_print(uint8_t addr, uint8_t data, uint8_t xpin)
 {
 	uint8_t splitted_data[4];
 	
-	
 	splitted_data[0] = (data & 0xF0) | EN | xpin;
 	splitted_data[1] = (data & 0xF0) | xpin;
 	splitted_data[2] = (data << 4)   | EN | xpin;
 	splitted_data[3] = (data << 4)   | xpin;
 	
-	I2C_sendStartAndSelect(addr | TW_WRITE);
+	TWI_selectDeviceForSending(addr);
+	//I2C_sendStartAndSelect(addr | TW_WRITE);
 	
 	for(size_t i = 0; i < 4 ; ++i)
-		I2C_sendByte(splitted_data[i]);
+		TWI_sendByte_ACK(splitted_data[i]);
+		//I2C_sendByte(splitted_data[i]);
 	
-	I2C_stop();
+	TWI_stopSequence();
+	//I2C_stop();
 	
 	_delay_ms(5);
 }
