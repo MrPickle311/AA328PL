@@ -17,10 +17,13 @@
 #define BIT_MASK_OF(pos)								( 1 << pos )
 #define NEGATIVE_BIT_MASK(pos)							~BIT_MASK_OF(pos)
 
-#define SET_BIT_AT(target,pos)							( target |= BIT_MASK_OF(pos) )
-#define CLEAR_BIT_AT(target,pos)						( target &= ~BIT_MASK_OF(pos)  )
+#define SET_BIT_AT(target,pos)							( target |= BIT_MASK_OF(pos)  )
+#define CLEAR_BIT_AT(target,pos)						( target &= ~BIT_MASK_OF(pos) )
+#define REVERSE_BIT_AT(target,pos)						( target ^= BIT_MASK_OF(pos)  )
+#define TOGGLE_BIT_AT(target,pos)						REVERSE_BIT_AT(target,pos)
 
 #define REVERSE_MASK(mask)								( mask ^= 0xFF )
+
 
 #define WIPE_REGISTER(target)							target = 0x0
 #define REPLACE_REGISTER(target,value)					target = value
@@ -37,6 +40,8 @@ void __setBitsAt(volatile uint8_t* target,uint8_t bits_count,...);
 
 void __clearBitsAt(volatile uint8_t* target,uint8_t bits_count,...);
 
+void __reverseBitsAt(volatile uint8_t* target,uint8_t bits_count,...);
+
 uint8_t createBitMaskOfOnes(uint8_t from, uint8_t to);
 
 #define WITH									|
@@ -44,8 +49,7 @@ uint8_t createBitMaskOfOnes(uint8_t from, uint8_t to);
 
 #define setBitsAt(target, ...)				    __setBitsAt(target, PP_NARG(__VA_ARGS__), __VA_ARGS__)
 #define clearBitsAt(target, ...)			    __clearBitsAt(target, PP_NARG(__VA_ARGS__), __VA_ARGS__)
-
-#define TOGGLE_BIT_AT(target,pos)				( target ^= BIT_MASK_OF(pos) )
+#define reverseBitsAt(target, ...)				__reverseBitsAt(target, PP_NARG(__VA_ARGS__),__VA_ARGS__)
 
 #define WRITE_BIT_AT(target,pos,value)			( value ? SET_BIT_AT(target,pos) : CLEAR_BIT_AT(target,pos) )
 

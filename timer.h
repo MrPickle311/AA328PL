@@ -76,11 +76,11 @@ enum TimerPinMode
 	CompareMatchSetPin   = 0b11
 };
 
-enum PinsUnderTimerControl
+enum Timer_PinsUnderControl
 {
-	OnlyPinA = 0b11000000,
-	OnlyPinB = 0b00110000,
-	BothPins = 0b11110000
+	Timer_OnlyPinA = 0b11000000,
+	Timer_OnlyPinB = 0b00110000,
+	Timer_BothPins = 0b11110000
 };
 
 enum Timer0Prescaler
@@ -129,8 +129,8 @@ enum Timer16BitInterruptMode
 
 enum InputCaptureEdge
 {
-	InputCaptureFallingEdge = 0b0,
-	InputCaptureRisingEdge =  0b1
+	Timer16Bit_InputCaptureFallingEdge = 0b0,
+	Timer16Bit_InputCaptureRisingEdge =  0b1
 };
 
 #define timerOverflowInterruptIsExecuting(timer_number)			IS_BIT_CLEARED_AT(TIFR##timer_number,0)
@@ -186,7 +186,7 @@ struct Timer0Setup_struct
 	uint8_t custom_compare_value_A_;
 	uint8_t custom_compare_value_B_;
 	
-	enum PinsUnderTimerControl pins_under_control_;
+	enum Timer_PinsUnderControl pins_under_control_;
 	enum TimerPinMode pin_A_mode_;
 	enum TimerPinMode pin_B_mode_;
 };
@@ -204,7 +204,7 @@ struct Timer1Setup_struct
 	uint16_t custom_output_compare_value_B_;
 	uint16_t custom_input_compare_value_;
 	
-	enum PinsUnderTimerControl pins_under_control_;
+	enum Timer_PinsUnderControl pins_under_control_;
 	enum TimerPinMode pin_A_mode_;
 	enum TimerPinMode pin_B_mode_;
 	
@@ -224,7 +224,7 @@ struct Timer2Setup_struct
 	uint8_t custom_compare_value_A_;
 	uint8_t custom_compare_value_B_;
 	
-	enum PinsUnderTimerControl pins_under_control_;
+	enum Timer_PinsUnderControl pins_under_control_;
 	enum TimerPinMode pin_A_mode_;
 	enum TimerPinMode pin_B_mode_;
 	

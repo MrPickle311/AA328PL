@@ -6,6 +6,7 @@
 Timer0Setup Timer0_DefaultSettings = {0x0,0x0,0x0,255,255,0x0,0x0,0x0};
 Timer1Setup Timer1_DefaultSettings = {0x0,0x0,0x0,0xFFFF,0xFFFF,0xFFFF,0x0,0x0,0x0,false,InputCaptureFallingEdge};
 Timer2Setup Timer2_DefaultSettings = {0x0,0x0,0x0,255,255,0x0,0x0,0x0,false,false};	
+
 static inline void _setTimerMode_impl(volatile uint8_t* control_register_A,volatile uint8_t* control_register_B,
 							          uint8_t mask)
 {
@@ -23,11 +24,12 @@ static inline void _setTimerMode_impl(volatile uint8_t* control_register_A,volat
 static inline void _setTimerPinMode_impl(volatile uint8_t* timer_control_register_A,
 										 enum TimerPinMode pin_A_mode,
 										 enum TimerPinMode pin_B_mode,
-										 enum PinsUnderTimerControl pins_under_control)
+										 enum Timer_PinsUnderControl pins_under_control)
 {
 	clearBitsAt(timer_control_register_A,7,6,5,4);
 	
-	uint8_t pin_mode_temp = GET_SHIFTED_BIT_MASK_OF(pin_A_mode,6)  WITH  GET_SHIFTED_BIT_MASK_OF(pin_B_mode,4);
+	//propably to repair
+	uint8_t pin_mode_temp = GET_LEFT_SHIFTED_BIT_MASK_OF(pin_A_mode,6)  WITH  GET_LEFT_SHIFTED_BIT_MASK_OF(pin_B_mode,4);
 	pin_mode_temp = FILTER_BIT_MASK(pin_mode_temp,pins_under_control);
 	
 	SET_SHIFTED_BIT_MASK(*timer_control_register_A,pin_mode_temp,0);
