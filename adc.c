@@ -171,7 +171,7 @@ void ADC_startConversion()
 {
 	SET_BIT_AT( ADCSRA ,ADSC );
 }
-ACME
+
 bool ADC_isConversionDone()
 {
 	return IS_BIT_SET_AT( ADCSRA , ADIF );

@@ -21,6 +21,7 @@
 #define CLEAR_BIT_AT(target,pos)						( target &= ~BIT_MASK_OF(pos) )
 #define REVERSE_BIT_AT(target,pos)						( target ^= BIT_MASK_OF(pos)  )
 #define TOGGLE_BIT_AT(target,pos)						REVERSE_BIT_AT(target,pos)
+#define EXTRACT_BIT_FROM(target,pos)					target & BIT_MASK_OF(pos)
 
 #define REVERSE_MASK(mask)								( mask ^= 0xFF )
 

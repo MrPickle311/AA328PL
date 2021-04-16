@@ -13,6 +13,7 @@
 #include "util/atomic.h"
 #include "adc.h"
 #include <stdfix-gcc.h>
+#include "comparator.h"
 
 #include "lcd.h"
 #include <stdio.h>

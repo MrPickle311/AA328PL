@@ -26,22 +26,22 @@
 
 enum USART_SyncMode
 {
-	USART_AsynchronousOperation = 0b00,
-	USART_SynchronousOperation = 0b01,
-	USART_MasterSPIMode = 0b11
+	USART_AsynchronousOperation =  0b00,
+	USART_SynchronousOperation  =  0b01,
+	USART_MasterSPIMode         =  0b11
 };
 
 enum USART_ParityMode
 {
 	USART_ParityDisabled = 0b00,
-	USART_EvenParity = 0b10,
-	USART_OddParity = 0b11
+	USART_EvenParity     = 0b10,
+	USART_OddParity      = 0b11
 };
 
 enum USART_StopBits
 {
-	USART_1StopBit = 0b0,
-	USART_2StopBit = 0b1
+	USART_1StopBit		 = 0b0,
+	USART_2StopBit		 = 0b1
 };
 
 enum USART_DataSize
@@ -59,13 +59,13 @@ enum USART_ClockSignalPolarization
 	USART_TXFallingEdge_RXRisingEdge = 0b1
 };
 
-#ifdef USART_INTERRUPT_MODE
+#if USART_0_INTERRUPT_MODE || USART_1_INTERRUPT_MODE
 
 enum USART_InterruptsMode
 {
-	USART_NoInterrupts = 0b000,
-	USART_OnReceivedCharInterrupt_Enable = 0b100,
-	USART_OnEmptyDataRegisterAndBufferInterrupt_Enable = 0b010,
+	USART_NoInterrupts									 = 0b000,
+	USART_OnReceivedCharInterrupt_Enable				 = 0b100,
+	USART_OnEmptyDataRegisterAndBufferInterrupt_Enable   = 0b010,
 	USART_OnTransmitBufferAvalaibleSpaceInterrupt_Enable = 0b001 
 };
 
@@ -74,59 +74,178 @@ enum USART_InterruptsMode
 enum USART_MultiprocessorMode
 {
 	USART_MultiprocessorMode_Disable = 0b0,
-	USART_MultiprocessorMode_Enable = 0b1
+	USART_MultiprocessorMode_Enable  = 0b1
 };
 
-#define USART_receiveEnable()		 SET_BIT_AT(UCSR0B,RXEN0)
-#define USART_transmitEnable()		 SET_BIT_AT(UCSR0B,TXEN0)
-#define USART_receiveDisable()		 CLEAR_BIT_AT(UCSR0B,RXEN0)
-#define USART_transmitDisable()		 CLEAR_BIT_AT(UCSR0B,TXEN0)
+//manually enabling/disabling usart functions
 
-#define USART_enable()				 setBitsAt((volatile uint8_t*)&UCSR0B,RXEN0,TXEN0)
-#define USART_disable()				 clearBitsAt((volatile uint8_t*)&UCSR0B,RXEN0,TXEN0)
+void USART0_receiveEnable();
+void USART0_transmitEnable();
+void USART0_receiveDisable();
+void USART0_transmitDisable();
 
-#define USART_waitForReceiveReady()  while (IS_BIT_CLEARED_AT(UCSR0A,RXC0))
-#define USART_waitForTransmitReady() while (IS_BIT_CLEARED_AT(UCSR0A,UDRE0))
+#ifdef MCU_328PB
 
-#define transmitByte(byte)			 UDR0 = byte
-#define receiveByte()				 UDR0
+void USART1_receiveEnable();
+void USART1_transmitEnable();
+void USART1_receiveDisable();
+void USART1_transmitDisable();
 
-bool USART_isTransmitReady();
+#endif
 
-#define USART_isBufferEmpty() USART_isTransmitReady()
+void USART0_enable();
+void USART0_disable();
 
-bool USART_isReceiveReady();
+#ifdef MCU_328PB
 
-#define USART_byteAvalaible() USART_isReceiveReady()
+void USART1_enable();
+void USART1_disable();
 
-bool USART_isTransmitBusy();
+#endif
 
-bool USART_transmitionCompleted();
+//waiting for device I/O ready
 
-bool USART_frameErrorOccured();
+void USART0_waitForReceiveReady();
+void USART0_waitForTransmitReady();
 
-bool USART_parityErrorOccured();
+#ifdef MCU_328PB
 
-inline uint8_t USART_getByteWithoutWait()
+void USART1_waitForReceiveReady();
+void USART1_waitForTransmitReady();
+
+#endif
+
+//force transmit and receiving macros
+
+#define USART0_transmitByte(byte)				 UDR0 = byte
+#define USART0_receiveByte()					 UDR0
+
+#ifdef MCU_328PB
+
+#define USART1_transmitByte(byte)				 UDR1 = byte
+#define USART1_receiveByte()					 UDR1
+
+//start frame detector flag operations
+
+void USART0_startConditionDetected();
+void USART0_clearStartConditionDetectedFlag();
+
+void USART1_startConditionDetected();
+void USART1_clearStartConditionDetectedFlag();
+
+#endif
+
+//transmition-receive state checking 
+
+bool USART0_isTransmitReady();
+
+#define USART0_isBufferEmpty()  USART0_isTransmitReady()
+
+bool USART0_isReceiveReady();
+
+#define USART0_isByteAvalaible() USART0_isReceiveReady()
+
+bool USART0_isTransmiterBusy();
+
+bool USART0_transmitionCompleted();
+
+bool USART0_frameErrorOccured();
+
+bool USART0_parityErrorOccured();
+
+#ifdef MCU_328PB
+
+bool USART1_isTransmitReady();
+
+#define USART1_isBufferEmpty()  USART1_isTransmitReady()
+
+bool USART1_isReceiveReady();
+
+#define USART1_isByteAvalaible() USART1_isReceiveReady()
+
+bool USART1_isTransmitBusy();
+
+bool USART1_transmitionCompleted();
+
+bool USART1_frameErrorOccured();
+
+bool USART1_parityErrorOccured();
+
+#endif
+
+//force sending/receiving bytes
+
+inline byte_t USART0_getByteWithoutWait()
 {
-	return receiveByte();
+	return USART0_receiveByte();
 }
 
-inline void USART_sendByteWithoutWait(uint8_t byte)
+inline void USART0_sendByteWithoutWait(byte_t byte)
 {
-	transmitByte(byte);
+	USART0_transmitByte(byte);
 }
 
-uint8_t USART_getByte();
+#ifdef MCU_328PB
 
-void    USART_sendByte(uint8_t byte);
-void	USART_sendChar(char character);
+inline byte_t USART1_getByteWithoutWait()
+{
+	return USART1_receiveByte();
+}
 
-void USART_sendDataSeries(const uint8_t __memx* series,uint8_t length);
+inline void USART1_sendByteWithoutWait(byte_t byte)
+{
+	USART1_transmitByte(byte);
+}
 
-void USART_sendText(const char __memx* text);
+#endif
 
-void USART_receiveSomeBytes(uint8_t* target,uint8_t count);
+//sending bytes/chars/9-bit data with waiting for usart ready
+
+byte_t USART0_getByte();
+
+double_byte_t USART0_get9BitData();
+
+char USART0_getChar();
+
+void USART0_sendByte(byte_t byte);
+
+void USART0_sendChar(char character);
+
+void USART0_send9BitData(double_byte_t data);
+
+#ifndef MCU_328PB
+
+byte_t USART1_getByte();
+
+double_byte_t USART1_get9BitData();
+
+char USART1_getChar();
+
+void USART1_sendByte(byte_t byte);
+
+void USART1_sendChar(char character);
+
+void USART1_send9BitData(double_byte_t data);
+
+#endif
+
+//sending string of bytes/chars/9-bit data
+
+void USART0_sendDataSeries(const byte_t __memx* series,length_t length);
+
+void USART0_sendText(const char __memx* text);
+
+void USART0_receiveSomeBytes(byte_t* target,length_t count);
+
+#ifndef MCU_328PB
+
+void USART1_sendDataSeries(const byte_t __memx* series,length_t length);
+
+void USART1_sendText(const char __memx* text);
+
+void USART1_receiveSomeBytes(byte_t* target,length_t count);
+
+#endif
 
 struct USART_Setup_struct
 {
@@ -140,73 +259,165 @@ struct USART_Setup_struct
 	bool startup_receive_enable_;
 	bool startup_transmit_enable_;
 	
-#ifdef USART_INTERRUPT_MODE
+#if  USART_0_INTERRUPT_MODE || USART_1_INTERRUPT_MODE
+	
 	enum USART_InterruptsMode interrupt_mode_;
-	uint8_t receive_buffer_size_;
-	uint8_t transmit_buffer_size_;
+	
+	length_t receive_buffer_size_;
+	length_t transmit_buffer_size_;
+
 #endif 
+
+#ifdef MCU_328PB
+	
+	bool enable_frame_detector_;//reg: UCSRnD , bit : SFDE
+	
+	bool enable_frame_detector_interrupt_;//reg: UCSRnD UCSRnB , bits  RXSIE ,RXCIE
+	
+#endif
+
 };
 
-typedef struct USART_Setup_struct USARTSetup;
-extern volatile USARTSetup USART_DefaultSettings;
+//forwarding names and default setting for user
+typedef struct USART_Setup_struct USART_Setup;
+extern const volatile USART_Setup __flash USART_DefaultSettings;
 
-void USART_init(USARTSetup setup);
 
-#ifdef USART_INTERRUPT_MODE
+//Interrupts mode
+
+
+#if USART_0_INTERRUPT_MODE || USART_1_INTERRUPT_MODE
 
 #include "circular_buffer.h"
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 
-volatile CircularBuffer usart_receive_buffer;
-volatile CircularBuffer usart_transmit_buffer;
+#endif
 
-extern void (* USART_OnReceivedChar_Handler)(byte_t y);
-extern void (* USART_OnEmptyDataRegisterAndBuffer_Handler)();
-extern void (* USART_OnTransmitBufferAvalaibleSpaceInterrupt_Handler)();
+#if USART_0_INTERRUPT_MODE
 
-#define USART_getByteFromReceiveBuffer(target)\
-		CircularBuffer_pop(usart_receive_buffer,&target)
+volatile CircularBuffer usart_0_receive_buffer;
+volatile CircularBuffer usart_0_transmit_buffer;
 
-#define USART_getByteFromTransmitBuffer(target)\
-		CircularBuffer_pop(usart_transmit_buffer,&target)
+extern void (* USART0_OnReceivedChar_Handler)(byte_t y);
+extern void (* USART0_OnEmptyDataRegisterAndBuffer_Handler)();
+extern void (* USART0_OnTransmitBufferAvalaibleSpaceInterrupt_Handler)();
 
-#define USART_sendByteToTransmitBuffer(byte)\
-		CircularBuffer_safePush(usart_transmit_buffer,byte)
+#ifdef MCU_328PB
+
+extern void (* USART0_OnStartFrameDetection_Handler)();
+
+#endif
+
+#define USART0_getByteFromReceiveBuffer(target)\
+		CircularBuffer_pop(usart_0_receive_buffer,&target)
+
+#define USART0_getByteFromTransmitBuffer(target)\
+		CircularBuffer_pop(usart_0_transmit_buffer,&target)
+
+#define USART0_sendByteToTransmitBuffer(byte)\
+		CircularBuffer_safePush(usart_0_transmit_buffer,byte)
 		
-#define USART_sendForceByteToTransmitBuffer(byte)\
-		CircularBuffer_forcePush(usart_transmit_buffer,byte)
+#define USART0_sendForceByteToTransmitBuffer(byte)\
+		CircularBuffer_forcePush(usart_0_transmit_buffer,byte)
 
-void USART_sendBytesToTransmitBuffer(byte_t* to_send,length_t size);
+void USART0_sendBytesToTransmitBuffer(byte_t* to_send,length_t size);
 
-enum OperationStatus USART_sendByteFromTransmitBufferToDevice();
+enum OperationStatus USART0_sendByteFromTransmitBufferToDevice();
 
 //return Failure if count of sent bytes != count(argument),otherwise Success
-enum OperationStatus USART_sendBytesFromTransmitBufferToDevice(length_t count);
+enum OperationStatus USART0_sendBytesFromTransmitBufferToDevice(length_t count);
 
-enum OperationStatus USART_getBytesFromReceiveBuffer(byte_t* target,length_t count);
+enum OperationStatus USART0_getBytesFromReceiveBuffer(byte_t* target,length_t count);
 
-void USART_emptyTransmitBuffer();
-void USART_emptyReceiveBuffer(byte_t* target);
+void USART0_emptyTransmitBuffer();
+void USART0_emptyReceiveBuffer(byte_t* target);
 
 #endif 
 
-#ifdef USART_USE_STREAM
+#if USART_1_INTERRUPT_MODE
+
+volatile CircularBuffer usart_1_receive_buffer;
+volatile CircularBuffer usart_1_transmit_buffer;
+
+extern void (* USART1_OnReceivedChar_Handler)(byte_t y);
+extern void (* USART1_OnEmptyDataRegisterAndBuffer_Handler)();
+extern void (* USART1_OnTransmitBufferAvalaibleSpaceInterrupt_Handler)();
+extern void (* USART1_OnStartFrameDetection_Handler)();
+
+#define USART1_getByteFromReceiveBuffer(target)\
+	CircularBuffer_pop(usart_1_receive_buffer,&target)
+
+#define USART1_getByteFromTransmitBuffer(target)\
+	CircularBuffer_pop(usart_1_transmit_buffer,&target)
+
+#define USART1_sendByteToTransmitBuffer(byte)\
+	CircularBuffer_safePush(usart_1_transmit_buffer,byte)
+
+#define USART1_sendForceByteToTransmitBuffer(byte)\
+	CircularBuffer_forcePush(usart_1_transmit_buffer,byte)
+
+void USART1_sendBytesToTransmitBuffer(byte_t* to_send,length_t size);
+
+enum OperationStatus USART1_sendByteFromTransmitBufferToDevice();
+
+//return Failure if count of sent bytes != count(argument),otherwise Success
+enum OperationStatus USART1_sendBytesFromTransmitBufferToDevice(length_t count);
+
+enum OperationStatus USART1_getBytesFromReceiveBuffer(byte_t* target,length_t count);
+
+void USART1_emptyTransmitBuffer();
+void USART1_emptyReceiveBuffer(byte_t* target);
+
+#endif
+
+
+//Stream mode
+
+
+#if USART_0_USE_STREAM || USART_1_USE_STREAM
 
 #include <stdio.h>
 
-int get(FILE* in_stream);
-int put(char c,FILE* out_stream);
+#endif
 
-volatile FILE USART_io_file;
+#ifdef USART_0_USE_STREAM
 
-#define USART_getchar()		  fgetc(&USART_io_file)
-#define USART_putchar(c)	  fputc(c,&USART_io_file)
+volatile FILE usart_0_io_file;
 
-#define USART_printf(fmt,...) fprintf(&USART_io_file,fmt,__VA_ARGS__)
-#define USART_scanf(fmt,...)  fscanf(&USART_io_file,fmt,__VA_ARGS__)
+#define USART0_getchar()	   fgetc(&usart_0_io_file)
+#define USART0_putchar(c)	   fputc(c,&usart_0_io_file)
 
+#define USART0_printf(fmt,...) fprintf(&usart_0_io_file,fmt,__VA_ARGS__)
+#define USART0_scanf(fmt,...)  fscanf(&usart_0_io_file,fmt,__VA_ARGS__)
 
-#endif // USART_USE_STREAM
+#define USART0_log(message)    fprintf(&usart_0_io_file,message)
+
+#endif // USART_1_USE_STREAM
+
+#ifdef USART_1_USE_STREAM
+
+volatile FILE usart_1_io_file;
+
+#define USART1_getchar()	   fgetc(&usart_1_io_file)
+#define USART1_putchar(c)	   fputc(c,&usart_1_io_file)
+
+#define USART1_printf(fmt,...) fprintf(&usart_1_io_file,fmt,__VA_ARGS__)
+#define USART1_scanf(fmt,...)  fscanf(&usart_1_io_file,fmt,__VA_ARGS__)
+
+#define USART1_log(message)    fprintf(&usart_1_io_file,message)
+
+#endif // USART_1_USE_STREAM
+
+//Initializations
+
+void USART0_init(USART_Setup setup);
+
+#if MCU_328PB
+
+void USART1_init(USART_Setup setup);
+
+#endif
+
 
 #endif /* USART_H_ */

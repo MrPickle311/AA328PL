@@ -16,6 +16,8 @@
 
 typedef uint8_t byte_t;
 
+typedef uint16_t double_byte_t;
+
 typedef uint8_t length_t;
 
 typedef uint8_t address_t;

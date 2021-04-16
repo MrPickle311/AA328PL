@@ -83,6 +83,9 @@ struct COMPARATOR_Setup_struct
 	enum COMPARATOR_DigitalPinsDisabled digit_pins_disabled_;//reg: DIDR1, bits: AIN1, AIN0
 	
 	enum COMPARATOR_MultiplexerDigitalPinsDisabled digit_multiplexer_pins_disabled_;//reg DIDR0 , bits: ADC0-5
+
+
+	bool startup_enable_;//reg: ACSR bit: ACD
 };
 
 typedef struct COMPARATOR_Setup_struct COMPARATOR_Setup;
@@ -92,5 +95,8 @@ typedef struct COMPARATOR_Setup_struct COMPARATOR_Setup;
 #define COMPARATOR_powerOff()	SET_BIT_AT(ACSR,ACD)
 
 void COMPARATOR_init(COMPARATOR_Setup setup);
+
+
+volatile void (*COMPARATOR_InterruptHandler)();
 
 #endif /* COMPARATOR_H_ */
