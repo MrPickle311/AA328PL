@@ -22,6 +22,8 @@ typedef uint8_t length_t;
 
 typedef uint8_t address_t;
 
+typedef volatile uint8_t register_t;
+
 enum OperationStatus
 {
 	Success,

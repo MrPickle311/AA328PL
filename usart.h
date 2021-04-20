@@ -127,10 +127,10 @@ void USART1_waitForTransmitReady();
 
 //start frame detector flag operations
 
-void USART0_startConditionDetected();
+bool USART0_startConditionDetected();
 void USART0_clearStartConditionDetectedFlag();
 
-void USART1_startConditionDetected();
+bool USART1_startConditionDetected();
 void USART1_clearStartConditionDetectedFlag();
 
 #endif
@@ -203,7 +203,9 @@ inline void USART1_sendByteWithoutWait(byte_t byte)
 
 byte_t USART0_getByte();
 
-double_byte_t USART0_get9BitData();
+typedef uint16_t usart_9bit_data_t;
+
+usart_9bit_data_t USART0_get9BitData();
 
 char USART0_getChar();
 
@@ -211,13 +213,13 @@ void USART0_sendByte(byte_t byte);
 
 void USART0_sendChar(char character);
 
-void USART0_send9BitData(double_byte_t data);
+void USART0_send9BitData(usart_9bit_data_t data);
 
 #ifndef MCU_328PB
 
 byte_t USART1_getByte();
 
-double_byte_t USART1_get9BitData();
+usart_9bit_data_t USART1_get9BitData();
 
 char USART1_getChar();
 
@@ -225,25 +227,25 @@ void USART1_sendByte(byte_t byte);
 
 void USART1_sendChar(char character);
 
-void USART1_send9BitData(double_byte_t data);
+void USART1_send9BitData(usart_9bit_data_t data);
 
 #endif
 
 //sending string of bytes/chars/9-bit data
 
-void USART0_sendDataSeries(const byte_t __memx* series,length_t length);
+void USART0_sendDataSeries(const byte_t __memx* series, length_t length);
 
 void USART0_sendText(const char __memx* text);
 
-void USART0_receiveSomeBytes(byte_t* target,length_t count);
+void USART0_receiveSomeBytes(byte_t* target, length_t count);
 
 #ifndef MCU_328PB
 
-void USART1_sendDataSeries(const byte_t __memx* series,length_t length);
+void USART1_sendDataSeries(const byte_t __memx* series, length_t length);
 
 void USART1_sendText(const char __memx* text);
 
-void USART1_receiveSomeBytes(byte_t* target,length_t count);
+void USART1_receiveSomeBytes(byte_t* target, length_t count);
 
 #endif
 
@@ -294,7 +296,7 @@ extern const volatile USART_Setup __flash USART_DefaultSettings;
 
 #endif
 
-#if USART_0_INTERRUPT_MODE
+#ifdef USART_0_INTERRUPT_MODE
 
 volatile CircularBuffer usart_0_receive_buffer;
 volatile CircularBuffer usart_0_transmit_buffer;
@@ -310,32 +312,32 @@ extern void (* USART0_OnStartFrameDetection_Handler)();
 #endif
 
 #define USART0_getByteFromReceiveBuffer(target)\
-		CircularBuffer_pop(usart_0_receive_buffer,&target)
+		CircularBuffer_pop(usart_0_receive_buffer, (byte_t*)&target)
 
 #define USART0_getByteFromTransmitBuffer(target)\
-		CircularBuffer_pop(usart_0_transmit_buffer,&target)
+		CircularBuffer_pop(usart_0_transmit_buffer, (byte_t*)&target)
 
 #define USART0_sendByteToTransmitBuffer(byte)\
-		CircularBuffer_safePush(usart_0_transmit_buffer,byte)
+		CircularBuffer_safePush(usart_0_transmit_buffer, byte)
 		
 #define USART0_sendForceByteToTransmitBuffer(byte)\
-		CircularBuffer_forcePush(usart_0_transmit_buffer,byte)
+		CircularBuffer_forcePush(usart_0_transmit_buffer, byte)
 
-void USART0_sendBytesToTransmitBuffer(byte_t* to_send,length_t size);
+void USART0_sendBytesToTransmitBuffer(byte_t* to_send, length_t size);
 
 enum OperationStatus USART0_sendByteFromTransmitBufferToDevice();
 
 //return Failure if count of sent bytes != count(argument),otherwise Success
 enum OperationStatus USART0_sendBytesFromTransmitBufferToDevice(length_t count);
 
-enum OperationStatus USART0_getBytesFromReceiveBuffer(byte_t* target,length_t count);
+enum OperationStatus USART0_getBytesFromReceiveBuffer(byte_t* target, length_t count);
 
 void USART0_emptyTransmitBuffer();
 void USART0_emptyReceiveBuffer(byte_t* target);
 
 #endif 
 
-#if USART_1_INTERRUPT_MODE
+#if USART_1_INTERRUPT_MODE && MCU_328PB
 
 volatile CircularBuffer usart_1_receive_buffer;
 volatile CircularBuffer usart_1_transmit_buffer;
@@ -346,10 +348,10 @@ extern void (* USART1_OnTransmitBufferAvalaibleSpaceInterrupt_Handler)();
 extern void (* USART1_OnStartFrameDetection_Handler)();
 
 #define USART1_getByteFromReceiveBuffer(target)\
-	CircularBuffer_pop(usart_1_receive_buffer,&target)
+	CircularBuffer_pop(usart_1_receive_buffer, (byte_t*)&target)
 
 #define USART1_getByteFromTransmitBuffer(target)\
-	CircularBuffer_pop(usart_1_transmit_buffer,&target)
+	CircularBuffer_pop(usart_1_transmit_buffer, (byte_t*)&target)
 
 #define USART1_sendByteToTransmitBuffer(byte)\
 	CircularBuffer_safePush(usart_1_transmit_buffer,byte)
@@ -357,14 +359,14 @@ extern void (* USART1_OnStartFrameDetection_Handler)();
 #define USART1_sendForceByteToTransmitBuffer(byte)\
 	CircularBuffer_forcePush(usart_1_transmit_buffer,byte)
 
-void USART1_sendBytesToTransmitBuffer(byte_t* to_send,length_t size);
+void USART1_sendBytesToTransmitBuffer(byte_t* to_send, length_t size);
 
 enum OperationStatus USART1_sendByteFromTransmitBufferToDevice();
 
 //return Failure if count of sent bytes != count(argument),otherwise Success
 enum OperationStatus USART1_sendBytesFromTransmitBufferToDevice(length_t count);
 
-enum OperationStatus USART1_getBytesFromReceiveBuffer(byte_t* target,length_t count);
+enum OperationStatus USART1_getBytesFromReceiveBuffer(byte_t* target, length_t count);
 
 void USART1_emptyTransmitBuffer();
 void USART1_emptyReceiveBuffer(byte_t* target);
@@ -385,31 +387,36 @@ void USART1_emptyReceiveBuffer(byte_t* target);
 
 volatile FILE usart_0_io_file;
 
-#define USART0_getchar()	   fgetc(&usart_0_io_file)
-#define USART0_putchar(c)	   fputc(c,&usart_0_io_file)
+//*(FILE*)&file <- volatile typecasting 
 
-#define USART0_printf(fmt,...) fprintf(&usart_0_io_file,fmt,__VA_ARGS__)
-#define USART0_scanf(fmt,...)  fscanf(&usart_0_io_file,fmt,__VA_ARGS__)
+#define USART0_getchar()	   fgetc((FILE*)&usart_0_io_file)
+#define USART0_putchar(c)	   fputc(c, &usart_0_io_file)
 
-#define USART0_log(message)    fprintf(&usart_0_io_file,message)
+#define USART0_printf(fmt,...) fprintf(&usart_0_io_file, fmt, __VA_ARGS__)
+#define USART0_scanf(fmt,...)  fscanf(&usart_0_io_file, fmt, __VA_ARGS__)
+
+#define USART0_log(message)    fprintf(&usart_0_io_file, message)
 
 #endif // USART_1_USE_STREAM
 
-#ifdef USART_1_USE_STREAM
+#if USART_1_USE_STREAM && MCU_328PB
 
 volatile FILE usart_1_io_file;
 
 #define USART1_getchar()	   fgetc(&usart_1_io_file)
 #define USART1_putchar(c)	   fputc(c,&usart_1_io_file)
 
-#define USART1_printf(fmt,...) fprintf(&usart_1_io_file,fmt,__VA_ARGS__)
-#define USART1_scanf(fmt,...)  fscanf(&usart_1_io_file,fmt,__VA_ARGS__)
+#define USART1_printf(fmt, ...) fprintf(&usart_1_io_file, fmt, __VA_ARGS__)
+#define USART1_scanf(fmt, ...)  fscanf(&usart_1_io_file, fmt, __VA_ARGS__)
 
-#define USART1_log(message)    fprintf(&usart_1_io_file,message)
+#define USART1_log(message)    fprintf(&usart_1_io_file, message)
 
 #endif // USART_1_USE_STREAM
 
+
+
 //Initializations
+
 
 void USART0_init(USART_Setup setup);
 
