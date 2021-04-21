@@ -9,7 +9,7 @@
 
 //GLOBAL DECLARATIONS
 #define NINTH_BIT_POS 8
-
+#define NOTHING		  0
 //in bytes
 #define DEFAULT_DEFAULT_BUFFER_SIZE 10
 
@@ -46,12 +46,12 @@ byte_t USART0_getByte()
 }
 
 #define RXB80_TO_9BIT_DISTANCE 7
-#define RXB80_POS 1
+#define RXB80_IN_REG_POS 1
 usart_9bit_data_t USART0_get9BitData()
 {
 	USART0_waitForReceiveReady();
 	usart_9bit_data_t data = USART0_receiveByte();//get normal byte
-	SET_SHIFTED_BIT_MASK(data, EXTRACT_BIT_FROM(UCSR0B, RXB80_POS), RXB80_TO_9BIT_DISTANCE);// get and set 9th bit 
+	SET_SHIFTED_BIT_MASK(data, EXTRACT_BIT_FROM(UCSR0B, RXB80_IN_REG_POS), RXB80_TO_9BIT_DISTANCE);// get and set 9th bit 
 	return data;
 }
 
@@ -73,14 +73,14 @@ void USART0_sendChar(char character)
 	USART0_transmitByte(character);
 }
 
-#define TXB80_POS 0 
+#define TXB80_IN_REG_POS 0 
 #define TXB80_TO_9BIT_DISTANCE 8
 void USART0_send9BitData(usart_9bit_data_t data)
 {
 	USART0_waitForTransmitReady();
 	USART0_transmitByte((uint8_t)data);
 	data = EXTRACT_BIT_FROM(data, NINTH_BIT_POS);
-	SET_SHIFTED_BIT_MASK(UCSR0B, GET_RIGHT_SHIFTED_BIT_MASK_OF(data, TXB80_TO_9BIT_DISTANCE), TXB80_POS);
+	SET_SHIFTED_BIT_MASK(UCSR0B, GET_RIGHT_SHIFTED_BIT_MASK_OF(data, TXB80_TO_9BIT_DISTANCE), TXB80_IN_REG_POS);
 }
 
 #ifdef MCU_328PB
@@ -92,12 +92,12 @@ byte_t USART1_getByte()
 }
 
 #define RXB81_TO_9BIT_DISTANCE 7
-#define RXB81_POS 1
+#define RXB81_IN_REG_POS 1
 usart_9bit_data_t USART1_get9BitData()
 {
 	USART1_waitForReceiveReady();
 	usart_9bit_data_t data = USART1_receiveByte();//get normal byte
-	SET_SHIFTED_BIT_MASK(data, EXTRACT_BIT_FROM(UCSR1B, RXB81_POS), RXB81_TO_9BIT_DISTANCE);// get and set 9th bit
+	SET_SHIFTED_BIT_MASK(data, EXTRACT_BIT_FROM(UCSR1B, RXB81_IN_REG_POS), RXB81_TO_9BIT_DISTANCE);// get and set 9th bit
 	return data;
 }
 
@@ -119,14 +119,14 @@ void USART1_sendChar(char character)
 	USART1_transmitByte(character);
 }
 
-#define TXB81_POS 0
+#define TXB81_IN_REG_POS 0
 #define TXB81_TO_9BIT_DISTANCE 8
 void USART1_send9BitData(usart_9bit_data_t data)
 {
 	USART1_waitForTransmitReady();
 	USART1_transmitByte((uint8_t)data);
-	data = EXTRACT_BIT_FROM(data, 8);
-	SET_SHIFTED_BIT_MASK(UCSR1B, GET_RIGHT_SHIFTED_BIT_MASK_OF(data, TXB81_TO_9BIT_DISTANCE), TXB81_POS);
+	data = EXTRACT_BIT_FROM(data, TXB81_TO_9BIT_DISTANCE);
+	SET_SHIFTED_BIT_MASK(UCSR1B, GET_RIGHT_SHIFTED_BIT_MASK_OF(data, TXB81_TO_9BIT_DISTANCE), TXB81_IN_REG_POS);
 }
 
 #endif
@@ -241,24 +241,24 @@ void USART1_transmitDisable()
 
 void USART0_enable()
 {
-	setBitsAt((volatile uint8_t*)&UCSR0B, RXEN0, TXEN0);
+	setBitsAt((register_t*)&UCSR0B, RXEN0, TXEN0);
 }
 
 void USART0_disable()
 {
-	clearBitsAt((volatile uint8_t*)&UCSR0B, RXEN0, TXEN0);
+	clearBitsAt((register_t*)&UCSR0B, RXEN0, TXEN0);
 }
 
 #ifdef MCU_328PB
 
 void USART1_enable()
 {
-	setBitsAt((volatile uint8_t*)&UCSR1B, RXEN1, TXEN1);
+	setBitsAt((register_t*)&UCSR1B, RXEN1, TXEN1);
 }
 
 void USART1_disable()
 {
-	clearBitsAt((volatile uint8_t*)&UCSR1B, RXEN1, TXEN1);
+	clearBitsAt((register_t*)&UCSR1B, RXEN1, TXEN1);
 }
 
 #endif
@@ -382,36 +382,36 @@ bool USART1_parityErrorOccured()
 
 //reg: UBRRnH , UBRRnL , UCSRnA
 //bits : U2Xn
-#define U2Xn_POS 1 
+#define U2Xn_IN_REG_POS 1 
 static inline void _injectBaudRate_impl(register_t* UBRRnL_reg,
 										register_t* UBRRnH_reg,
 										register_t* UCSRnA_reg)
 {
 	#include <util/setbaud.h>
 	
-	REPLACE_REGISTER(*UBRRnH_reg, UBRRH_VALUE);//UBRRnH
-	REPLACE_REGISTER(*UBRRnL_reg, UBRRL_VALUE);//UBRRnL
+	REPLACE_REGISTER(*UBRRnH_reg, UBRRH_VALUE);
+	REPLACE_REGISTER(*UBRRnL_reg, UBRRL_VALUE);
 	
 	//UCSRnA , U2Xn
 	#if USE_2X
-		SET_BIT_AT(*UCSRnA_reg, U2Xn_POS);
+		SET_BIT_AT(*UCSRnA_reg, U2Xn_IN_REG_POS);
 	#else
-		CLEAR_BIT_AT(*UCSRnA_reg, U2Xn_POS);
+		CLEAR_BIT_AT(*UCSRnA_reg, U2Xn_IN_REG_POS);
 	#endif
 }
 
-#define _injectBaudRate(usart_nmbr) _injectBaudRate_impl(&UBRR##usart_nmbr##H,\
-														 &UBRR##usart_nmbr##L,\
+#define _injectBaudRate(usart_nmbr) _injectBaudRate_impl(&UBRR##usart_nmbr##L,\
+														 &UBRR##usart_nmbr##H,\
 														 &UCSR##usart_nmbr##A)
 
 //UCSRnC
 //UMSELn1,UMSELn0
-#define UMSELn0_POS 6
-#define UMSELn1_POS 7
+#define UMSELn0_IN_REG_POS 6
+#define UMSELn1_IN_REG_POS 7
 static inline void _setSyncMode_impl(enum USART_SyncMode sync_mode, register_t* UCSRnC_reg)
 {
-	clearBitsAt((register_t*)UCSRnC_reg, UMSELn1_POS, UMSELn0_POS);
-	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, sync_mode, UMSELn0_POS);
+	clearBitsAt(UCSRnC_reg, UMSELn1_IN_REG_POS, UMSELn0_IN_REG_POS);
+	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, sync_mode, UMSELn0_IN_REG_POS);
 }
 
 #define _setSyncMode(sync_mode, usart_nmbr) _setSyncMode_impl(sync_mode, &UCSR##usart_nmbr##C)
@@ -419,45 +419,44 @@ static inline void _setSyncMode_impl(enum USART_SyncMode sync_mode, register_t* 
 
 //reg: UCSRnC
 //bits : UPMn1,UPMn0
-#define UPMn0_POS 4
-#define UPMn1_POS 5
+#define UPMn0_IN_REG_POS 4
+#define UPMn1_IN_REG_POS 5
 static inline void _setParityMode_impl(enum USART_ParityMode parity_mode, register_t* UCSRnC_reg)
 {
-	clearBitsAt((register_t*)UCSRnC_reg, UPMn1_POS, UPMn0_POS);
-	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, parity_mode, UPMn0_POS);
+	clearBitsAt(UCSRnC_reg, UPMn1_IN_REG_POS, UPMn0_IN_REG_POS);
+	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, parity_mode, UPMn0_IN_REG_POS);
 }
 
 #define _setParityMode(parity_mode, usart_nmbr) _setParityMode_impl(parity_mode, &UCSR##usart_nmbr##C)
 
 //reg: UCSRnC
 //bits: USBSn
-#define USBSn_POS 3 
+#define USBSn_IN_REG_POS 3 
 static inline void _setStopBits_impl(enum USART_StopBits stop_bits, register_t* UCSRnC_reg)
 {
-	CLEAR_BIT_AT(*UCSRnC_reg, USBSn_POS);
-	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, stop_bits,USBSn_POS);
+	CLEAR_BIT_AT(*UCSRnC_reg, USBSn_IN_REG_POS);
+	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, stop_bits,USBSn_IN_REG_POS);
 }
 
 #define _setStopBits(stop_bits, usart_nmbr) _setStopBits_impl(stop_bits, &UCSR##usart_nmbr##C)
 
-//TUTAJ SKOÑCZY£EM
 //reg:  UCSRnC, UCSRnB,
 //bits: UCSZn2,,UCSZn1,UCSZn0,
-#define UCPOL0  0
-#define UCSZ00  1
-#define UCSZ01  2
-#define UCSZn2_POS
-#define UCSZn1_POS
-#define UCSZn0_POS
+#define UCSZn2_IN_REG_POS 2
+#define UCSZn1_IN_REG_POS 2
+#define UCSZn0_IN_REG_POS 1
+#define UCSZn2_IN_SETUP_POS 2
+#define UCSZn1_IN_SETUP_POS 1
+#define UCSZn0_IN_SETUP_POS 0
 static inline void _setDataSize_impl(enum USART_DataSize data_size,
 									 register_t* UCSRnB_reg,
 									 register_t* UCSRnC_reg)
 {
-	clearBitsAt((register_t*)UCSRnC_reg, 2, 1);//reg: UCSRnC , bits : UCSZn1,UCSZn0,
-	CLEAR_BIT_AT(*UCSRnB_reg, 2);//reg: UCSRnB, bits : UCSZn2
+	clearBitsAt(UCSRnC_reg, UCSZn1_IN_REG_POS, UCSZn0_IN_REG_POS);
+	CLEAR_BIT_AT(*UCSRnB_reg, UCSZn2_IN_REG_POS);
 	
-	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, EXTRACT_BIT_MASK_FROM(data_size, 0, 1), 1);
-	SET_SHIFTED_BIT_MASK(*UCSRnB_reg, EXTRACT_BIT_MASK_FROM(data_size, 2, 2), 2);
+	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, EXTRACT_BIT_MASK_FROM(data_size, UCSZn0_IN_SETUP_POS, UCSZn1_IN_SETUP_POS), UCSZn0_IN_REG_POS);
+	SET_SHIFTED_BIT_MASK(*UCSRnB_reg, EXTRACT_BIT_MASK_FROM(data_size, UCSZn2_IN_SETUP_POS, UCSZn2_IN_SETUP_POS), NOTHING);
 }
 
 #define _setDataSize(data_size, usart_nmbr) _setDataSize_impl(data_size,\
@@ -466,20 +465,22 @@ static inline void _setDataSize_impl(enum USART_DataSize data_size,
 
 //reg:  UCSRnC,
 //bits: UCPOLn
-static inline void _setClockSignalPolarization_impl(enum USART_ClockSignalPolarization polar, volatile uint8_t* reg)
+#define UCPOLn_IN_REG_POS 0
+static inline void _setClockSignalPolarization_impl(enum USART_ClockSignalPolarization polar, register_t* UCSRnC_reg)
 {
-	CLEAR_BIT_AT(*reg, 0);
-	SET_SHIFTED_BIT_MASK(*reg, polar, 0);
+	CLEAR_BIT_AT(*UCSRnC_reg, UCPOLn_IN_REG_POS);
+	SET_SHIFTED_BIT_MASK(*UCSRnC_reg, polar, UCPOLn_IN_REG_POS);
 }
 
 #define _setClockSignalPolarization(polar, usart_nmbr) _setClockSignalPolarization_impl(polar, &UCSR##usart_nmbr##C)
 
 //reg: UCSRnA
 //bit: MPCMn
-static inline void _setMultiprocessorMode_impl(enum USART_MultiprocessorMode multiprocesor_mode, volatile uint8_t* reg)
+#define MPCMn_IN_REG_POS 0
+static inline void _setMultiprocessorMode_impl(enum USART_MultiprocessorMode multiprocesor_mode, register_t* UCSRnA_reg)
 {
-	CLEAR_BIT_AT(*reg, 0);
-	SET_SHIFTED_BIT_MASK(*reg, multiprocesor_mode,0);
+	CLEAR_BIT_AT(*UCSRnA_reg, MPCMn_IN_REG_POS);
+	SET_SHIFTED_BIT_MASK(*UCSRnA_reg, multiprocesor_mode,MPCMn_IN_REG_POS);
 }
 
 #define _setMultiprocessorMode(multiprocesor_mode, usart_nmbr) _setMultiprocessorMode_impl(multiprocesor_mode,&UCSR##usart_nmbr##A)
@@ -488,12 +489,12 @@ static inline void _setMultiprocessorMode_impl(enum USART_MultiprocessorMode mul
 
 //reg: UCSRnD
 //bits : SFDE,RXCIE
-static inline void _setupFrameDetector_impl(USART_Setup* setup, volatile uint8_t* reg)
+static inline void _setupFrameDetector_impl(USART_Setup* setup, register_t* UCSRnD_reg)
 {
 	if(setup->enable_frame_detector_)
-		SET_BIT_AT(*reg, SFDE);
+		SET_BIT_AT(*UCSRnD_reg, SFDE);
 	if(setup->enable_frame_detector_interrupt_)
-		SET_BIT_AT(*reg, RXSIE);
+		SET_BIT_AT(*UCSRnD_reg, RXSIE);
 }
 
 #define _setupFrameDetector(setup_ptr, usart_nmbr) _setupFrameDetector_impl(setup_ptr, &UCSR##usart_nmbr##D)
@@ -504,10 +505,13 @@ static inline void _setupFrameDetector_impl(USART_Setup* setup, volatile uint8_t
 
 //reg: UCSRnB
 //bits: RXCIEn,TXCIEn,UDRIEn
-static inline void _setInterruptsMode_impl(enum USART_InterruptsMode interrupt_mode, volatile uint8_t* reg)
+#define  RXCIEn_IN_REG_POS 7
+#define  TXCIEn_IN_REG_POS 6
+#define  UDRIEn_IN_REG_POS 5
+static inline void _setInterruptsMode_impl(enum USART_InterruptsMode interrupt_mode, register_t* UCSRnB_reg)
 {
-	clearBitsAt((volatile uint8_t*)reg, 7, 6, 5);
-	SET_SHIFTED_BIT_MASK(*reg, interrupt_mode, 5);
+	clearBitsAt(UCSRnB_reg, RXCIEn_IN_REG_POS, TXCIEn_IN_REG_POS, UDRIEn_IN_REG_POS);
+	SET_SHIFTED_BIT_MASK(*UCSRnB_reg, interrupt_mode, UDRIEn_IN_REG_POS);
 }
 
 #define _setInterruptsMode(interrupt_mode, usart_nmbr)	_setInterruptsMode_impl(interrupt_mode, &UCSR##usart_nmbr##B)
@@ -556,11 +560,11 @@ volatile bool   usart_0_transmit_flag;
 
 void USART0_sendBytesToTransmitBuffer(byte_t* to_send, length_t size)
 {
-	length_t idx = 0;
+	length_t array_idx = 0;
 	while(size--)
 	{
-		USART0_sendForceByteToTransmitBuffer(to_send[idx]);
-		++idx;
+		USART0_sendForceByteToTransmitBuffer(to_send[array_idx]);
+		++array_idx;
 	}
 }
 
@@ -585,11 +589,11 @@ enum OperationStatus USART0_getBytesFromReceiveBuffer(byte_t* target, length_t c
 {
 	enum OperationStatus status = Success;
 	
-	length_t idx = 0;
+	length_t array_idx = 0;
 	while(count-- && status != Failure)
 	{
-		status = USART0_getByteFromReceiveBuffer(target[idx]);
-		++idx;
+		status = USART0_getByteFromReceiveBuffer(target[array_idx]);
+		++array_idx;
 	}
 	
 	return status;
@@ -605,11 +609,11 @@ void USART0_emptyTransmitBuffer()
 void USART0_emptyReceiveBuffer(byte_t* target)
 {
 	enum OperationStatus status = Success;
-	length_t idx = 0;
+	length_t array_idx = 0;
 	while(status != Failure)
 	{
-		status = USART0_getByteFromReceiveBuffer(target[idx]);
-		++idx;
+		status = USART0_getByteFromReceiveBuffer(target[array_idx]);
+		++array_idx;
 	}
 }
 
@@ -658,11 +662,11 @@ volatile bool   usart_1_transmit_flag;
 
 void USART1_sendBytesToTransmitBuffer(byte_t* to_send, length_t size)
 {
-	length_t idx = 0;
+	length_t array_idx = 0;
 	while(size--)
 	{
-		USART1_sendForceByteToTransmitBuffer(to_send[idx]);
-		++idx;
+		USART1_sendForceByteToTransmitBuffer(to_send[array_idx]);
+		++array_idx;
 	}
 }
 
@@ -687,11 +691,11 @@ enum OperationStatus USART1_getBytesFromReceiveBuffer(byte_t* target, length_t c
 {
 	enum OperationStatus status = Success;
 	
-	length_t idx = 0;
+	length_t array_idx = 0;
 	while(count-- && status != Failure)
 	{
-		status = USART1_getByteFromReceiveBuffer(target[idx]);
-		++idx;
+		status = USART1_getByteFromReceiveBuffer(target[array_idx]);
+		++array_idx;
 	}
 	
 	return status;
@@ -707,11 +711,11 @@ void USART1_emptyTransmitBuffer()
 void USART1_emptyReceiveBuffer(byte_t* target)
 {
 	enum OperationStatus status = Success;
-	length_t idx = 0;
+	length_t array_idx = 0;
 	while(status != Failure)
 	{
-		status = USART1_getByteFromReceiveBuffer(target[idx]);
-		++idx;
+		status = USART1_getByteFromReceiveBuffer(target[array_idx]);
+		++array_idx;
 	}
 }
 
@@ -790,9 +794,10 @@ inline void _setupUsartStream1()
 #endif
 
 //Initializations
-
+//0- describes a USART0 number
 void USART0_init(USART_Setup setup)
 {
+	
 	power_usart0_enable();
 	
 	_setSyncMode(setup.sync_mode_, 0);
@@ -837,7 +842,7 @@ void USART0_init(USART_Setup setup)
 }
 
 #if MCU_328PB
-
+//1- describes a USART1 number
 void USART1_init(USART_Setup setup)
 {
 	power_usart1_enable();
@@ -851,7 +856,7 @@ void USART1_init(USART_Setup setup)
 
 	#ifdef USART_1_INTERRUPT_MODE
 	
-	_setupBuffers(&setup, 1);
+	_setupBuffers(&setup, USART_1);
 	
 	#endif
 	
@@ -872,9 +877,9 @@ void USART1_init(USART_Setup setup)
 	
 	#endif
 
-	_injectBaudRate(1);
+	_injectBaudRate(USART_1);
 
-	_setupFrameDetector(&setup, 1);
+	_setupFrameDetector(&setup, USART_1);
 
 }
 

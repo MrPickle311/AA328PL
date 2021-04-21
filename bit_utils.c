@@ -18,12 +18,12 @@ void __setBitsAt(volatile uint8_t* target,uint8_t bits_count,...)
 	for (uint8_t i = 0; i < bits_count ; ++i)
 		SET_BIT_AT(temp_mask,va_arg(valist,size_t));
 	
-	*target = temp_mask;
+	*target |= temp_mask;
 	
 	va_end(valist);
 }
 
-void __clearBitsAt(volatile uint8_t* target,uint8_t bits_count,...)
+void __clearBitsAt(volatile uint8_t* target, uint8_t bits_count,...)
 {
 	va_list valist;
 	va_start(valist,bits_count);
@@ -38,7 +38,7 @@ void __clearBitsAt(volatile uint8_t* target,uint8_t bits_count,...)
 	va_end(valist);
 }
 
-void __reverseBitsAt(volatile uint8_t* target,uint8_t bits_count,...)
+void __reverseBitsAt(volatile uint8_t* target, uint8_t bits_count,...)
 {
 	va_list valist;
 	va_start(valist,bits_count);
