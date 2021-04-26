@@ -11,21 +11,23 @@
 
 #include "bit_utils.h"
 #include "global_utils.h"
-#include <util/twi.h>
+#include "twi_status.h"
 
+//some compatibility defines for a 328P
+#ifndef MCU_328PB
+	#define TWDR0		TWDR
+	#define TWCR0		TWCR
+	#define TWSR0		TWSR
+	#define TWBR0		TWBR
+#endif
 
 //more readable definitions
-#define TWI_status TW_STATUS
+#define TWI0_status TW0_STATUS
+#define TWI1_status TW1_STATUS
 
 #define TWI_stopBit														BIT_MASK_OF(TWSTO)
 #define TWI_startBIT													BIT_MASK_OF(TWSTA)
 #define TWI_collisionFLag												BIT_MASK_OF(TWWC)
-
-#define TWI_startOperation()											REPLACE_REGISTER(TWCR, BIT_MASK_OF(TWINT) WITH BIT_MASK_OF(TWEN))
-////setBitsAt(&TWCR,TWINT,TWEN)
-
-#define TWI_sendToRegister(what)										TWDR = what
-#define TWI_receive()													TWDR
 
 enum TWI_StandardSpeed
 {
@@ -47,33 +49,33 @@ volatile enum TWI_Error current_twi_error;
 
 //Basic
 
-#define TWI_waitForOperationComplete()						 while (!(TWCR & _BV(TWINT)))
-#define TWI_waitForStopBitSent()							 while (TWCR & _BV(TWSTO))
+#define TWI_waitForOperationComplete()						 while (!(TWCR0 & _BV(TWINT)))
+#define TWI_waitForStopBitSent()							 while (TWCR0 & _BV(TWSTO))
 
-#define TWI_waitFor(what)									 while (TWI_status != what)
+#define TWI_waitForStatus(status)							 while (TWI0_status != status)
 
-#define TWI_waitForStart_ACK()								 TWI_waitFor(TW_START)
-#define TWI_waitForRepeatedStart_ACK()						 TWI_waitFor(TW_REP_START)
+#define TWI_waitForStart_ACK()								 TWI_waitForStatus(TW_START)
+#define TWI_waitForRepeatedStart_ACK()						 TWI_waitForStatus(TW_REP_START)
 
 //Master Transmitter
 
-#define TWI_MasterTransmitter_waitForSlaveAddressSent_ACK()	 TWI_waitFor(TW_MT_SLA_ACK)
-#define TWI_MasterTransmitter_waitForSlaveAddressSent_NACK() TWI_waitFor(TW_MT_SLA_NACK)
+#define TWI_MasterTransmitter_waitForSlaveAddressSent_ACK()	 TWI_waitForStatus(TW_MT_SLA_ACK)
+#define TWI_MasterTransmitter_waitForSlaveAddressSent_NACK() TWI_waitForStatus(TW_MT_SLA_NACK)
 
-#define TWI_MasterTransmitter_waitForByteSent_ACK()			 TWI_waitFor(TW_MT_DATA_ACK)
-#define TWI_MasterTransmitter_waitForByteSent_NACK()		 TWI_waitFor(TW_MT_DATA_NACK)
+#define TWI_MasterTransmitter_waitForByteSent_ACK()			 TWI_waitForStatus(TW_MT_DATA_ACK)
+#define TWI_MasterTransmitter_waitForByteSent_NACK()		 TWI_waitForStatus(TW_MT_DATA_NACK)
 
-#define TWI_MasterTransmitter_waitForArbitrationLost()		 TWI_waitFor(TW_MT_ARB_LOST)
+#define TWI_MasterTransmitter_waitForArbitrationLost()		 TWI_waitForStatus(TW_MT_ARB_LOST)
 
 //MasterReceiver
 
-#define TWI_MasterReceiver_waitForSlaveAddressSent_ACK()	 TWI_waitFor(TW_MR_SLA_ACK)
-#define TWI_MasterReceiver_waitForSlaveAddressSent_NACK()	 TWI_waitFor(TW_MR_SLA_NACK)
+#define TWI_MasterReceiver_waitForSlaveAddressSent_ACK()	 TWI_waitForStatus(TW_MR_SLA_ACK)
+#define TWI_MasterReceiver_waitForSlaveAddressSent_NACK()	 TWI_waitForStatus(TW_MR_SLA_NACK)
 
-#define TWI_MasterReceiver_waitForByteReceived_ACK()		 TWI_waitFor(TW_MR_DATA_ACK)
-#define TWI_MasterReceiver_waitForByteReceived_NACK()		 TWI_waitFor(TW_MR_DATA_NACK)
+#define TWI_MasterReceiver_waitForByteReceived_ACK()		 TWI_waitForStatus(TW_MR_DATA_ACK)
+#define TWI_MasterReceiver_waitForByteReceived_NACK()		 TWI_waitForStatus(TW_MR_DATA_NACK)
 
-#define TWI_MasterReceiver_waitForArbitrationLost()		     TWI_waitFor(TW_MR_ARB_LOST)
+#define TWI_MasterReceiver_waitForArbitrationLost()		     TWI_waitForStatus(TW_MR_ARB_LOST)
 
 struct TWI_Setup_struct
 {

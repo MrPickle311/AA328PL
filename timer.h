@@ -167,7 +167,7 @@ enum InputCaptureEdge
 #define haltTimer2()											setBitsAt((volatile uint8_t*)&GTCCR,TSM,PSRASY)
 #define haltTimer0AndTimer1()									setBitsAt((volatile uint8_t*)&GTCCR,TSM,PSRSYNC)
 
-#define releaseAllTimers()										GTCCR = 0
+#define releaseAllTimers()										WIPE_REGISTER(GTCCR)
 #define resetAllTimers()										releaseAllTimers()
 #define runAllTimers()											releaseAllTimers()
 

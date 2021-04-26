@@ -27,6 +27,7 @@
 
 
 #define WIPE_REGISTER(target)							target = 0x0
+#define FILL_REGISTER(target)							target = 0xFF
 #define REPLACE_REGISTER(target,value)					target = value
  
 #define SHIFT_MASK_LEFT(target,shift)					target <<= shift

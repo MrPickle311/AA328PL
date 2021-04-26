@@ -629,8 +629,15 @@ void USART0_emptyReceiveBuffer(byte_t* target)
 	}
 }
 
+//compatibility defines
+#ifndef MCU_328PB//for 328P
+	#define USART0_RX_vect		USART_RX_vect
+	#define USART0_TX_vect		USART_TX_vect
+	#define USART0_UDRE_vect	USART_UDRE_vect
+#endif
+
 //this isr handles user handler and receives data
-ISR(USART_RX_vect)
+ISR(USART0_RX_vect)
 {
 	usart_0_received_byte = USART0_receiveByte();
 	CircularBuffer_forcePush(usart_0_receive_buffer, usart_0_received_byte);
@@ -638,13 +645,13 @@ ISR(USART_RX_vect)
 }
 
 //this isr handles only user handler
-ISR(USART_TX_vect)
+ISR(USART0_TX_vect)
 {
 	tryToExecuteHandler(USART0_OnEmptyDataRegisterAndBuffer_Handler);
 }
 
 //this isr handles only user handler
-ISR(USART_UDRE_vect)
+ISR(USART0_UDRE_vect)
 {
 	tryToExecuteHandler(USART0_OnTransmitBufferAvalaibleSpaceInterrupt_Handler);
 }

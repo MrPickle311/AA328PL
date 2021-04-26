@@ -14,8 +14,10 @@
 #include "adc.h"
 #include <stdfix-gcc.h>
 #include "comparator.h"
+#include "usart.h"
 
-#include "lcd.h"
+
+//#include "lcd.h"
 #include <stdio.h>
 
 #define LEDDISPNO	4
@@ -165,24 +167,24 @@ int main()
 	//timer.pins_under_control_ = Timer_OnlyPinA;
 	//timer.pin_A_mode_ = 
 	
-	LCD_State lcd;
-	lcd.address = 0x27;
-	lcd.blink_on = true;
-	sprintf(&lcd.bottom_line,"");
-	sprintf(&lcd.top_line,"");
+	//LCD_State lcd;
+	//lcd.address = 0x27;
+	//lcd.blink_on = true;
+	//sprintf(&lcd.bottom_line,"");
+	//sprintf(&lcd.top_line,"");
 	
-	TWI_Setup setup = TWI_defaultSetup;
-	setup.generate_acknowledge_signal_ = true;
-	setup.use_standard_twi_speed_ = true;
-	setup.standard_speed_ = TWI_100Kbps;
+	//TWI_Setup setup = TWI_defaultSetup;
+	//setup.generate_acknowledge_signal_ = true;
+	//setup.use_standard_twi_speed_ = true;
+	//setup.standard_speed_ = TWI_100Kbps;
 	
-	TWI_init(setup);
+	//TWI_init(setup);
 	
-	LCD_init(&lcd);
+	//LCD_init(&lcd);
 	
-	sprintf(&lcd.top_line,"xd");
+	//sprintf(&lcd.top_line,"xd");
 	
-	LCD_display(&lcd);
+	//LCD_display(&lcd);
 	
 	//adc_init();	
 	
@@ -211,8 +213,8 @@ int main()
 	while(1)
 	{
 		getVoltage(&first,&last);
-		sprintf(&lcd.top_line,"vol : %d,%d V",first,last);
-		LCD_display(&lcd);
+		//sprintf(&lcd.top_line,"vol : %d,%d V",first,last);
+		//LCD_display(&lcd);
 		_delay_ms(500);
 	}
 }

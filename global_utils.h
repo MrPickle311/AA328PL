@@ -14,6 +14,10 @@
 #include <stdbool.h>
 #include "config.h"
 
+typedef uint8_t pin_t;
+
+typedef uint8_t mask_8bit_t;
+
 typedef uint8_t byte_t;
 
 typedef uint16_t double_byte_t;
@@ -23,6 +27,8 @@ typedef uint8_t length_t;
 typedef uint8_t address_t;
 
 typedef volatile uint8_t register_t;
+
+typedef volatile uint8_t port_t;
 
 enum OperationStatus
 {

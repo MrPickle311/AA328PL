@@ -9,12 +9,24 @@
 #include <avr/power.h>
 #include "util/delay.h"
 
-#define startElementaryOperation(operation_bit)	setBitsAt(&TWCR,TWINT,TWEN,operation_bit)
+//settings for TWCRn registers 
+volatile uint8_t twi0_twcr_settings = 0x0;
+
+#define TWI_startOperation()											REPLACE_REGISTER(TWCR0, BIT_MASK_OF(TWINT) WITH BIT_MASK_OF(TWEN))
+////setBitsAt(&TWCR,TWINT,TWEN)
+
+#define startElementaryOperation(operation_bit)							setBitsAt(&TWCR0,TWINT,TWEN,operation_bit)
 // REPLACE_REGISTER(TWCR,\
-																     BIT_MASK_OF(TWINT) WITH\
-																	 BIT_MASK_OF(TWEN)  WITH\
-																	 BIT_MASK_OF(operation_bit))
+BIT_MASK_OF(TWINT) WITH\
+BIT_MASK_OF(TWEN)  WITH\
+BIT_MASK_OF(operation_bit))
 //setBitsAt(&TWCR,TWINT,TWEN,operation_bit)
+
+#define TWI_sendToRegister(data)										REPLACE_REGISTER(TWDR0,data)
+#define TWI_receive()													TWDR0
+
+
+
 
 #define expectTWIStatus(expected_status,possible_twi_error)\
 		if(TW_STATUS != expected_status)\
@@ -36,7 +48,7 @@ static inline void _setSpeed(uint16_t speed)
 {
 	if(speed * 16 < F_CPU)
 	{
-		clearBitsAt(&TWSR,TWPS0,TWPS1);
+		clearBitsAt(&TWSR0,TWPS0,TWPS1);
 		speed = (F_CPU / speed / 1000 - 16) / 2;
 		uint8_t prescaler = 0;
 		while (speed > 255)
@@ -44,8 +56,8 @@ static inline void _setSpeed(uint16_t speed)
 			++prescaler;
 			speed /= 4;
 		}
-		REPLACE_REGISTER(TWSR, ( TWSR AND_MUST ( BIT_MASK_OF(TWPS0) WITH BIT_MASK_OF(TWPS1) ) ) WITH prescaler );
-		REPLACE_REGISTER(TWBR,speed);
+		REPLACE_REGISTER(TWSR0, ( TWSR0 AND_MUST ( BIT_MASK_OF(TWPS0) WITH BIT_MASK_OF(TWPS1) ) ) WITH prescaler );
+		REPLACE_REGISTER(TWBR0,speed);
 	}
 	else current_twi_error = TWI_busSpeedError;
 }
@@ -62,9 +74,9 @@ static inline void _setStandardSpeed(TWI_Setup* setup)
 static inline void _basicSetup(TWI_Setup* setup) 
 {
 	if(setup->generate_acknowledge_signal_)
-		SET_BIT_AT(TWCR,TWEA);
+		SET_BIT_AT(TWCR0,TWEA);
 	if(setup->startup_enable_)
-		SET_BIT_AT(TWCR,TWEN);
+		SET_BIT_AT(TWCR0,TWEN);twi0_twcr_settings;
 }
 
 //do wyjebania
@@ -84,7 +96,8 @@ void TWI_init(TWI_Setup setup)
 		_setStandardSpeed(&setup);
 	else _setSpeed(setup.speed_);
 	
-	_setupPins();
+	//do wyjebania ,ma byc zewnêtrzny R4.7
+	//_setupPins();
 	
 }
 
@@ -288,7 +301,7 @@ void TWI_scanBus(address_t* addresses,uint8_t expected_devices_nmbr)
 		TWI_startSequence_NoACK();
 		TWI_sendDeviceAddressForSending_NoACK(address);
 		_delay_ms(5);
-		if(TWI_status == TW_MT_SLA_ACK)
+		if(TWI0_status == TW_MT_SLA_ACK)
 		{
 			addresses[idx] = address;
 			++idx;
