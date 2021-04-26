@@ -194,7 +194,7 @@ struct Timer0Setup_struct
 typedef struct Timer0Setup_struct Timer0Setup;
 extern Timer0Setup Timer0_DefaultSettings;
 
-struct Timer1Setup_struct
+struct Timer16BitSetup_struct
 {
 	enum Timer16BitMode mode_;
 	enum Timer16BitInterruptMode interrupt_mode_;
@@ -212,8 +212,8 @@ struct Timer1Setup_struct
 	enum InputCaptureEdge edge_mode_;
 };
 
-typedef struct Timer1Setup_struct Timer1Setup;
-extern Timer1Setup Timer1_DefaultSettings;
+typedef struct Timer16BitSetup_struct Timer16BitSetup;
+extern Timer16BitSetup Timer16bit_DefaultSettings;
 
 struct Timer2Setup_struct
 {
@@ -236,7 +236,8 @@ typedef struct Timer2Setup_struct Timer2Setup;
 extern Timer2Setup Timer2_DefaultSettings;
 
 void timer0Init(Timer0Setup setup,bool halt_all_timers_before_begin);
-void timer1Init(Timer1Setup setup,bool halt_all_timers_before_begin);
+void timer1Init(Timer16BitSetup setup,bool halt_all_timers_before_begin);
+
 void timer2Init(Timer2Setup setup,bool halt_all_timers_before_begin);
 
 #endif /* TIMER_H_INCLUDED */

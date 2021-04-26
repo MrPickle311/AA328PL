@@ -26,8 +26,8 @@
 
 enum USART_SyncMode
 {
-	USART_AsynchronousOperation =  0b00,
-	USART_SynchronousOperation  =  0b01,
+	USART_AsynchronousOperations =  0b00,
+	USART_SynchronousOperations  =  0b01,
 	USART_MasterSPIMode         =  0b11
 };
 
@@ -331,6 +331,11 @@ enum OperationStatus USART0_sendByteFromTransmitBufferToDevice();
 enum OperationStatus USART0_sendBytesFromTransmitBufferToDevice(length_t count);
 
 enum OperationStatus USART0_getBytesFromReceiveBuffer(byte_t* target, length_t count);
+
+#define USART0_waitForByteInReceiveBuffer() 	while(CircularBuffer_isEmpty(usart_0_receive_buffer))
+#define USART0_waitUntilReceiveBufferIsFull()	while(!CircularBuffer_isFull(usart_0_receive_buffer))
+
+void USART0_waitForSeveralBytesInReceiveBuffer(byte_t* target, length_t count);
 
 void USART0_emptyTransmitBuffer();
 void USART0_emptyReceiveBuffer(byte_t* target);

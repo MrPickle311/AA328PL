@@ -9,7 +9,12 @@
 #include <avr/power.h>
 #include "util/delay.h"
 
-#define startElementaryOperation(operation_bit) setBitsAt(&TWCR,TWINT,TWEN,operation_bit)
+#define startElementaryOperation(operation_bit)	setBitsAt(&TWCR,TWINT,TWEN,operation_bit)
+// REPLACE_REGISTER(TWCR,\
+																     BIT_MASK_OF(TWINT) WITH\
+																	 BIT_MASK_OF(TWEN)  WITH\
+																	 BIT_MASK_OF(operation_bit))
+//setBitsAt(&TWCR,TWINT,TWEN,operation_bit)
 
 #define expectTWIStatus(expected_status,possible_twi_error)\
 		if(TW_STATUS != expected_status)\
@@ -62,9 +67,11 @@ static inline void _basicSetup(TWI_Setup* setup)
 		SET_BIT_AT(TWCR,TWEN);
 }
 
+//do wyjebania
 static inline void _setupPins()
 {
-	setBitsAt(&DDRC,DDC5,DDC4);
+	//DDRC = _BV(DDC5) | _BV(DDC4);
+	//setBitsAt(&DDRC,DDC5,DDC4);
 }
 
 void TWI_init(TWI_Setup setup)
@@ -87,6 +94,8 @@ static inline void _startSequence_impl_()
 {
 	startElementaryOperation(TWSTA);
 	TWI_waitForOperationComplete();	
+	//new
+	//CLEAR_BIT_AT(TWCR,TWSTA);
 }
 
 void TWI_startSequence_ACK()
@@ -230,6 +239,8 @@ void TWI_stopSequence()
 {
 	startElementaryOperation(TWSTO);
 	TWI_waitForStopBitSent();
+	//new
+	//CLEAR_BIT_AT(TWCR,TWSTO);
 }
 
 //more High level operations
@@ -247,8 +258,8 @@ void TWI_selectDeviceForReceiving(address_t address)
 }
 
 void TWI_sendByteToDeviceRegister(address_t device_address,
-									   address_t register_address,
-									    byte_t byte)
+								  address_t register_address,
+								  byte_t byte)
 {
 	TWI_selectDeviceForSending(device_address);
 	TWI_sendByte_ACK(register_address);
@@ -257,7 +268,7 @@ void TWI_sendByteToDeviceRegister(address_t device_address,
 }
 
 byte_t TWI_receiveByteFromDeviceRegister(address_t device_address,
-								 address_t register_address)
+										 address_t register_address)
 {
 	TWI_selectDeviceForSending(device_address);
 	TWI_sendByte_ACK(register_address);

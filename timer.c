@@ -1,10 +1,11 @@
 #include "timer.h"
 #include <avr/power.h>
+#include "global_utils.h"
 
 #define power_timer_enable(n) power_timer##n##_enable()
 
 Timer0Setup Timer0_DefaultSettings = {0x0,0x0,0x0,255,255,0x0,0x0,0x0};
-Timer1Setup Timer1_DefaultSettings = {0x0,0x0,0x0,0xFFFF,0xFFFF,0xFFFF,0x0,0x0,0x0,false,InputCaptureFallingEdge};
+Timer16BitSetup Timer16bit_DefaultSettings = {0x0,0x0,0x0,0xFFFF,0xFFFF,0xFFFF,0x0,0x0,0x0,false,Timer16Bit_InputCaptureFallingEdge};
 Timer2Setup Timer2_DefaultSettings = {0x0,0x0,0x0,255,255,0x0,0x0,0x0,false,false};	
 
 static inline void _setTimerMode_impl(volatile uint8_t* control_register_A,volatile uint8_t* control_register_B,
@@ -46,7 +47,7 @@ static inline void _setTimerInterruptMode_impl(volatile uint8_t* timer_interrupt
 };
 
 #define _setTimerInterruptMode(timer_number,interrupt_mode) \
-	_setTimerInterruptMode_impl((volatile uint8_t*)&TIFR##timer_number,interrupt_mode)
+	_setTimerInterruptMode_impl((volatile uint8_t*)&TIMSK##timer_number,interrupt_mode)
 
 static inline void _setTimer0Prescaler(enum Timer0Prescaler prescaler)
 {
@@ -149,7 +150,7 @@ static inline void _setTimer1CustomInputCompareValue(uint16_t custom_input_compa
 	ICR1 = custom_input_compare_value; 
 }
 
-void timer1Init(Timer1Setup setup,bool halt_all_timers_before_begin)
+void timer1Init(Timer16BitSetup setup,bool halt_all_timers_before_begin)
 {
 	power_timer_enable(1);
 

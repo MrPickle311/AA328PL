@@ -13,9 +13,9 @@
 //in bytes
 #define DEFAULT_DEFAULT_BUFFER_SIZE 10
 
-const volatile volatile USART_Setup __flash USART_DefaultSettings = 
+const volatile USART_Setup __flash USART_DefaultSettings = 
 {
-	USART_AsynchronousOperation,
+	USART_AsynchronousOperations,
 	USART_ParityDisabled,
 	USART_1StopBit,
 	USART_8Bit,
@@ -135,7 +135,7 @@ void USART1_send9BitData(usart_9bit_data_t data)
 
 void USART0_sendDataSeries(const byte_t __memx* series, length_t length)
 {
-	while(--length)
+	while(length--)
 	{
 		USART0_sendChar(*series);
 		++series;
@@ -165,7 +165,7 @@ void USART0_receiveSomeBytes(byte_t* target, length_t count)
 
 void USART1_sendDataSeries(const byte_t __memx* series, length_t length)
 {
-	while(--length)
+	while(length--)
 	{
 		USART1_sendChar(*series);
 		++series;
@@ -599,6 +599,18 @@ enum OperationStatus USART0_getBytesFromReceiveBuffer(byte_t* target, length_t c
 	return status;
 }
 
+
+void USART0_waitForSeveralBytesInReceiveBuffer(byte_t* target, length_t count)
+{
+	length_t array_idx = 0;
+	while(count--)
+	{
+		USART0_waitForByteInReceiveBuffer();
+		USART0_getByteFromReceiveBuffer(target[array_idx]);
+		++array_idx;
+	}
+}
+
 void USART0_emptyTransmitBuffer()
 {
 	enum OperationStatus status = Success;
@@ -618,7 +630,7 @@ void USART0_emptyReceiveBuffer(byte_t* target)
 }
 
 //this isr handles user handler and receives data
-ISR(USART0_RX_vect)
+ISR(USART_RX_vect)
 {
 	usart_0_received_byte = USART0_receiveByte();
 	CircularBuffer_forcePush(usart_0_receive_buffer, usart_0_received_byte);
@@ -626,13 +638,13 @@ ISR(USART0_RX_vect)
 }
 
 //this isr handles only user handler
-ISR(USART0_TX_vect)
+ISR(USART_TX_vect)
 {
 	tryToExecuteHandler(USART0_OnEmptyDataRegisterAndBuffer_Handler);
 }
 
 //this isr handles only user handler
-ISR(USART0_UDRE_vect)
+ISR(USART_UDRE_vect)
 {
 	tryToExecuteHandler(USART0_OnTransmitBufferAvalaibleSpaceInterrupt_Handler);
 }
@@ -877,9 +889,9 @@ void USART1_init(USART_Setup setup)
 	
 	#endif
 
-	_injectBaudRate(USART_1);
+	_injectBaudRate(1);
 
-	_setupFrameDetector(&setup, USART_1);
+	_setupFrameDetector(&setup, 1);
 
 }
 

@@ -7,18 +7,17 @@
 
 #include "bit_utils.h"
 
-
 void __setBitsAt(volatile uint8_t* target,uint8_t bits_count,...)
 {
 	va_list valist;
 	va_start(valist,bits_count);
 	
-	uint8_t temp_mask = 0;
+	uint8_t temp_mask = *target;
 	
 	for (uint8_t i = 0; i < bits_count ; ++i)
 		SET_BIT_AT(temp_mask,va_arg(valist,size_t));
-	
-	*target |= temp_mask;
+
+	*target = temp_mask;
 	
 	va_end(valist);
 }
@@ -43,7 +42,7 @@ void __reverseBitsAt(volatile uint8_t* target, uint8_t bits_count,...)
 	va_list valist;
 	va_start(valist,bits_count);
 	
-	uint8_t temp_mask = 0;
+	uint8_t temp_mask = *target;
 	
 	for (uint8_t i = 0; i < bits_count ; ++i)
 		REVERSE_BIT_AT(temp_mask,va_arg(valist,size_t));

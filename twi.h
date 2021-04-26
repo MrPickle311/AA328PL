@@ -21,7 +21,8 @@
 #define TWI_startBIT													BIT_MASK_OF(TWSTA)
 #define TWI_collisionFLag												BIT_MASK_OF(TWWC)
 
-#define TWI_startOperation()											setBitsAt(&TWCR,TWINT,TWEN)
+#define TWI_startOperation()											REPLACE_REGISTER(TWCR, BIT_MASK_OF(TWINT) WITH BIT_MASK_OF(TWEN))
+////setBitsAt(&TWCR,TWINT,TWEN)
 
 #define TWI_sendToRegister(what)										TWDR = what
 #define TWI_receive()													TWDR
