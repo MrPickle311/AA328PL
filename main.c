@@ -126,13 +126,28 @@ int main()
 	timer1.mode_ = TIMER_16Bit_CTC_Output;
 	timer1.prescaler_ = TIMER_Synchronous_Prescaler1024;
 	timer1.interrupt_mode_ = TIMER_16Bit_TimerCompareMatchA;
-	timer1.custom_output_compare_value_A_ = 15624;
+	timer1.pin_A_mode_ = TIMER_CompareMatchToogle;
+	timer1.pins_under_control_ = TIMER_BothPins;
+	timer1.custom_output_compare_value_A_ = 15000;//15624*1.75;
 
 	TIMER_1Init(timer1,false);
 	
 	PORT_setPinAsOutput(PORT_CONFIG(B),5);
 	PORT_setPinLow(PORT_STATE(B),5);
+	
 	//sei();
+	
+	DDRB |= _BV(DDB1);
+	DDRD |= _BV(DDD6);
+	
+	Timer0Setup timer0 = Timer0_DefaultSettings;
+	timer0.mode_ = TIMER_8Bit_CTC;
+	timer0.custom_compare_value_A_ = 244;
+	timer0.prescaler_ = TIMER_Synchronous_Prescaler1024;
+	timer0.interrupt_mode_ = TIMER_8Bit_CompareMatchA;
+	timer0.pin_A_mode_ = TIMER_CompareMatchToogle;
+	timer0.pins_under_control_ = TIMER_OnlyPinA;
+	TIMER_0Init(timer0,false);
 	
 	while(1)
 	{

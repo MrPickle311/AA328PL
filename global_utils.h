@@ -28,6 +28,8 @@ typedef uint8_t address_t;
 
 typedef volatile uint8_t register_t;
 
+typedef volatile uint16_t register_16bit_t;
+
 typedef volatile uint8_t port_t;
 
 enum OperationStatus

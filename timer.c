@@ -108,24 +108,43 @@ static inline void _setTimerPrescaler_impl(register_t* TCCRnB_reg,
 	    _setTimerPrescaler_impl(&TCCR##timer_number##B,\
 							    prescaler_settings)
 
-//
+//common implementation for setting custom output compare value in a timer
 
-static inline void _setTimer0CustomCompareValue(uint8_t custom_compare_value_A,
-												uint8_t custom_compare_value_B)
+static inline void _setTimerCustomOutputCompareValue_impl(register_16bit_t* OCRnA_reg,
+														  register_16bit_t* OCRnB_reg,
+														  uint16_t custom_out_compare_value_A,
+														  uint16_t custom_out_compare_value_B)
 {
-	OCR0A = custom_compare_value_A;
-	OCR0B = custom_compare_value_B;
+	*OCRnA_reg = custom_out_compare_value_A;
+	*OCRnB_reg = custom_out_compare_value_B;
 }
 
+#define _setTimerCustomOutputCompareValue(timer_number,\
+									custom_compare_value_A,\
+									custom_compare_value_B) \
+		_setTimerCustomOutputCompareValue_impl((volatile uint16_t*)&OCR##timer_number##A,\
+										       (volatile uint16_t*)&OCR##timer_number##B,\
+										       custom_compare_value_A,\
+										       custom_compare_value_B)
 
-//
+//setting input compare match for 16 bit timers
+
+static inline void _setTimer_16Bit_CustomInputCompareValue_impl(register_16bit_t* ICRn_reg,
+																uint16_t custom_in_compare_value)
+{
+	*ICRn_reg = custom_in_compare_value;
+}
+
+#define _setTimer_16Bit_CustomInputCompareValue(timer_number,custom_compare_value)\ 
+	    _setTimer_16Bit_CustomInputCompareValue_impl(&ICR##,custom_compare_value)
+
 void TIMER_0Init(Timer0Setup setup,bool halt_all_timers_before_begin)
 {
 	power_timer_enable(0);//w³¹czenie zasilania dla zegara timera 0
 
 	_setTimerMode(0,setup.mode_);
 	_setTimerPrescaler(0,setup.prescaler_);
-	_setTimer0CustomCompareValue(setup.custom_compare_value_A_,setup.custom_compare_value_B_);
+	_setTimerCustomOutputCompareValue(0,setup.custom_compare_value_A_,setup.custom_compare_value_B_);
 	_setTimerPinMode(0,setup.pin_A_mode_,setup.pin_B_mode_,setup.pins_under_control_);
 
 	if(halt_all_timers_before_begin)
@@ -135,13 +154,6 @@ void TIMER_0Init(Timer0Setup setup,bool halt_all_timers_before_begin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static inline void _setTimer2CustomCompareValue(uint8_t custom_compare_value_A,
-												uint8_t custom_compare_value_B)
-{
-	OCR2A = custom_compare_value_A;
-	OCR2B = custom_compare_value_B;
-}
 
 static inline void _setupTimer2AsyncExternalClock(Timer2Setup setup)
 {
@@ -163,7 +175,7 @@ void TIMER_2Init(Timer2Setup setup,bool halt_all_timers_before_begin)
 	_setTimerMode(2,setup.mode_);
 	_setTimerPinMode(2,setup.pin_A_mode_,setup.pin_B_mode_,setup.pins_under_control_);
 	_setTimerPrescaler(2,setup.prescaler_);
-	_setTimer2CustomCompareValue(setup.custom_compare_value_A_,setup.custom_compare_value_B_);
+	_setTimerCustomOutputCompareValue(2,setup.custom_compare_value_A_,setup.custom_compare_value_B_);
 
 	if(halt_all_timers_before_begin)
 		TIMER_haltAll();
@@ -183,13 +195,6 @@ static inline void _setTimer1InputCapture(bool input_compare_filtration,
 		SET_BIT_AT(TCCR1B,ICNC1);
 }
 
-static inline void _setTimer1CustomOutputCompareValue(uint16_t custom_compare_value_A,
-										              uint16_t custom_compare_value_B)
-{
-	OCR1A = custom_compare_value_A;
-	OCR1B = custom_compare_value_B;
-}
-
 static inline void _setTimer1CustomInputCompareValue(uint16_t custom_input_compare_value)
 {
 	ICR1 = custom_input_compare_value; 
@@ -205,7 +210,8 @@ void TIMER_1Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
 	_setTimer1InputCapture(setup.input_compare_filtration_,setup.edge_mode_);
 	_setTimerPrescaler(1,setup.prescaler_);
 
-	_setTimer1CustomOutputCompareValue(setup.custom_output_compare_value_A_,
+	_setTimerCustomOutputCompareValue(1,
+									   setup.custom_output_compare_value_A_,
 									   setup.custom_output_compare_value_B_);
 	_setTimer1CustomInputCompareValue(setup.custom_input_compare_value_);
 
