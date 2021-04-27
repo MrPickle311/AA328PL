@@ -126,7 +126,7 @@ int main()
 	timer1.mode_ = TIMER_16Bit_CTC_Output;
 	timer1.prescaler_ = TIMER_Synchronous_Prescaler1024;
 	timer1.interrupt_mode_ = TIMER_16Bit_TimerCompareMatchA;
-	timer1.custom_output_compare_value_A_ = 15624*0.1;
+	timer1.custom_output_compare_value_A_ = 15624;
 
 	TIMER_1Init(timer1,false);
 	

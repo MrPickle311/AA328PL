@@ -104,16 +104,11 @@ static inline void _setTimerPrescaler_impl(register_t* TCCRnB_reg,
 	 SET_SHIFTED_BIT_MASK(*TCCRnB_reg,prescaler_mode_settings_mask,NOT_SHIFT);
  }
 
-#define setTimerPrescaler(timer_number,prescaler_settings) \
+#define _setTimerPrescaler(timer_number,prescaler_settings) \
 	    _setTimerPrescaler_impl(&TCCR##timer_number##B,\
 							    prescaler_settings)
 
 //
-static inline void _setTimer0Prescaler(enum TIMER_SynchronousPrescaler prescaler)
-{
-	clearBitsAt(&TCCR0B,CS00,CS01,CS02);
-	SET_SHIFTED_BIT_MASK(TCCR0B,prescaler,0);
-}
 
 static inline void _setTimer0CustomCompareValue(uint8_t custom_compare_value_A,
 												uint8_t custom_compare_value_B)
@@ -122,12 +117,14 @@ static inline void _setTimer0CustomCompareValue(uint8_t custom_compare_value_A,
 	OCR0B = custom_compare_value_B;
 }
 
+
+//
 void TIMER_0Init(Timer0Setup setup,bool halt_all_timers_before_begin)
 {
 	power_timer_enable(0);//w³¹czenie zasilania dla zegara timera 0
 
 	_setTimerMode(0,setup.mode_);
-	_setTimer0Prescaler(setup.prescaler_);
+	_setTimerPrescaler(0,setup.prescaler_);
 	_setTimer0CustomCompareValue(setup.custom_compare_value_A_,setup.custom_compare_value_B_);
 	_setTimerPinMode(0,setup.pin_A_mode_,setup.pin_B_mode_,setup.pins_under_control_);
 
@@ -138,12 +135,6 @@ void TIMER_0Init(Timer0Setup setup,bool halt_all_timers_before_begin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static inline void _setTimer2Prescaler(enum TIMER_AsyncPrescaler prescaler)
-{
-	clearBitsAt(&TCCR2B,CS20,CS21,CS22);
-	SET_SHIFTED_BIT_MASK(TCCR2B,prescaler,0);
-}
 
 static inline void _setTimer2CustomCompareValue(uint8_t custom_compare_value_A,
 												uint8_t custom_compare_value_B)
@@ -171,7 +162,7 @@ void TIMER_2Init(Timer2Setup setup,bool halt_all_timers_before_begin)
 
 	_setTimerMode(2,setup.mode_);
 	_setTimerPinMode(2,setup.pin_A_mode_,setup.pin_B_mode_,setup.pins_under_control_);
-	_setTimer2Prescaler(setup.prescaler_);
+	_setTimerPrescaler(2,setup.prescaler_);
 	_setTimer2CustomCompareValue(setup.custom_compare_value_A_,setup.custom_compare_value_B_);
 
 	if(halt_all_timers_before_begin)
@@ -182,12 +173,6 @@ void TIMER_2Init(Timer2Setup setup,bool halt_all_timers_before_begin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static inline void _setTimer1Prescaler(enum TIMER_SynchronousPrescaler prescaler)
-{
-	clearBitsAt(&TCCR1B,CS10,CS11,CS12);
-	SET_SHIFTED_BIT_MASK(TCCR1B,prescaler,0);
-}
 
 static inline void _setTimer1InputCapture(bool input_compare_filtration,
 										  enum TIMER_InputCaptureEdge edge_mode)
@@ -218,7 +203,7 @@ void TIMER_1Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
 	_setTimerMode(1,setup.mode_);
 
 	_setTimer1InputCapture(setup.input_compare_filtration_,setup.edge_mode_);
-	_setTimer1Prescaler(setup.prescaler_);
+	_setTimerPrescaler(1,setup.prescaler_);
 
 	_setTimer1CustomOutputCompareValue(setup.custom_output_compare_value_A_,
 									   setup.custom_output_compare_value_B_);
