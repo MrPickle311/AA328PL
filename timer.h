@@ -29,204 +29,192 @@ timer2 jest asynchroniczny
 #include <avr/io.h>
 #include <avr/builtins.h>
 #include "bit_utils.h"
+#include "global_utils.h"
 
-enum Timer8BitMode //other bits
+enum TIMER_8BitMode //other bits
 {
-	Timer8Bit_Normal						= 0b000,
-	Timer8Bit_PWM_PhaseCorrected_Top		= 0b001,
-	Timer8Bit_CTC							= 0b010,
-	Timer8Bit_FastPWM_Top					= 0b011,
-	Timer8Bit_FastPWM_PhaseCorrected_Output = 0b101,
-	Timer8Bit_FastPWM_Output				= 0b111
+	TIMER_8Bit_Normal							= 0b000,
+	TIMER_8Bit_PWM_PhaseCorrected_Top			= 0b001,
+	TIMER_8Bit_CTC								= 0b010,
+	TIMER_8Bit_FastPWM_Top						= 0b011,
+	TIMER_8Bit_FastPWM_PhaseCorrected_Output	= 0b101,
+	TIMER_8Bit_FastPWM_Output					= 0b111
 };
 
 //WGM10,WGM11,WGM12,WGM13
-enum Timer16BitMode
+enum TIMER_16BitMode
 {
-	Timer16Bit_Normal =								 0b0000,
+	TIMER_16Bit_Normal												= 0b0000,
 	
-	Timer16Bit_8BitPWM_PhaseCorrected_Top =			 0b0001,
-	Timer16Bit_9BitPWM_PhaseCorrected_Top =			 0b0010,
-	Timer16Bit_10BitPWM_PhaseCorrected_Top =		 0b0011,
+	TIMER_16Bit_8BitPWM_PhaseCorrected_Top							= 0b0001,
+	TIMER_16Bit_9BitPWM_PhaseCorrected_Top							= 0b0010,
+	TIMER_16Bit_10BitPWM_PhaseCorrected_Top						    = 0b0011,
 	
-	Timer16Bit_CTC_Output =							 0b0100,
-	Timer16Bit_CTC_Input =							 0b1100,
+	TIMER_16Bit_CTC_Output											= 0b0100,
+	TIMER_16Bit_CTC_Input											= 0b1100,
 	
-	Timer16Bit_8BitFastPWM_Top =					 0b0101,
-	Timer16Bit_9BitFastPWM_Top =					 0b0110,
-	Timer16Bit_10BitFastPWM_Top =					 0b0111,
+	TIMER_16Bit_8BitFastPWM_Top										= 0b0101,
+	TIMER_16Bit_9BitFastPWM_Top										= 0b0110,
+	TIMER_16Bit_10BitFastPWM_Top									= 0b0111,
 	
-	Timer16Bit_PWM_PhaseAndFrequencyCorrect_Input =  0b1000,
-	Timer16Bit_PWM_PhaseAndFrequencyCorrect_Output = 0b1001,
+	TIMER_16Bit_PWM_PhaseAndFrequencyCorrect_Input					= 0b1000,
+	TIMER_16Bit_PWM_PhaseAndFrequencyCorrect_Output					= 0b1001,
 	
-	Timer16Bit_PWM_PhaseCorrect_Input =				 0b1010,
-	Timer16Bit_PWM_PhaseCorrect_Output =			 0b1011,
+	TIMER_16Bit_PWM_PhaseCorrect_Input								= 0b1010,
+	TIMER_16Bit_PWM_PhaseCorrect_Output								= 0b1011,
 	
-	Timer16Bit_FastPWM_Input =						 0b1110,
-	Timer16Bit_FastPWM_Output =						 0b1111
+	TIMER_16Bit_FastPWM_Input										= 0b1110,
+	TIMER_16Bit_FastPWM_Output										= 0b1111
 };
 
 
 //COM pins for all timers
-enum TimerPinMode
+enum TIMER_PinMode
 {
-	TimerNoControlPin    = 0b00,
-	CompareMatchToogle   = 0b01,
-	CompareMatchClearPin = 0b10,
-	CompareMatchSetPin   = 0b11
+	TIMER_NoControlPin		   = 0b00,
+	TIMER_CompareMatchToogle   = 0b01,
+	TIMER_CompareMatchClearPin = 0b10,
+	TIMER_CompareMatchSetPin   = 0b11
 };
 
-enum Timer_PinsUnderControl
+enum TIMER_PinsUnderControl
 {
-	Timer_OnlyPinA = 0b11000000,
-	Timer_OnlyPinB = 0b00110000,
-	Timer_BothPins = 0b11110000
+	TIMER_OnlyPinA = 0b11000000,
+	TIMER_OnlyPinB = 0b00110000,
+	TIMER_BothPins = 0b11110000
 };
 
-enum Timer0Prescaler
+enum TIMER_SynchronousPrescaler
 {
-	TimerDisabled						  = 0b000,
-	TimerNoPrescaling					  = 0b100,
-	TimerPrescaler8						  = 0b010,
-	TimerPrescaler64					  = 0b011,
-	TimerPrescaler256					  = 0b100,
-	TimerPrescaler1024					  = 0b101,
-	TimerExternalClockSourceT0FallingEdge = 0b110,
-	TimerExternalClockSourceT0RisingEdge  = 0b111
+	TIMER_Synchronous_Disabled						   = 0b000,
+	TIMER_Synchronous_NoPrescaling					   = 0b100,
+	TIMER_Synchronous_Prescaler8					   = 0b010,
+	TIMER_Synchronous_Prescaler64					   = 0b011,
+	TIMER_Synchronous_Prescaler256					   = 0b100,
+	TIMER_Synchronous_Prescaler1024					   = 0b101,
+	TIMER_Synchronous_ExternalClockSourceT0FallingEdge = 0b110,
+	TIMER_Synchronous_ExternalClockSourceT0RisingEdge  = 0b111
 };
 
-#define Timer1Prescaler Timer0Prescaler
-
-enum Timer2Prescaler
+enum TIMER_AsyncPrescaler
 {
-	Timer2_Disabled = 0b000,
-	Timer2_NoPrescaling = 0b001,
-	Timer2_Prescaler8 = 0b010,
-	Timer2_Prescaler32 = 0b011,
-	Timer2_Prescaler64 = 0b100,
-	Timer2_Prescaler128 = 0b101,
-	Timer2_Prescaler256 = 0b110,
-	Timer2_Prescaler1024 = 0b111
+	TIMER_Async_Disabled      = 0b000,
+	TIMER_Async_NoPrescaling  = 0b001,
+	TIMER_Async_Prescaler8    = 0b010,
+	TIMER_Async_Prescaler32   =	0b011,
+	TIMER_Async_Prescaler64   =	0b100,
+	TIMER_Async_Prescaler128  =	0b101,
+	TIMER_Async_Prescaler256  =	0b110,
+	TIMER_Async_Prescaler1024 = 0b111
 };
 
 
-enum Timer8BitInterruptMode
+enum TIMER_8Bit_InterruptMode
 {
-	Timer8Bit_NoInterrupts  = 0b000,
-	Timer8Bit_Overflow	    = 0b001,
-	Timer8Bit_CompareMatchA = 0b010,
-	Timer8Bit_CompareMatchB = 0b100
+	TIMER_8Bit_NoInterrupts  = 0b000,
+	TIMER_8Bit_Overflow	     = 0b001,
+	TIMER_8Bit_CompareMatchA = 0b010,
+	TIMER_8Bit_CompareMatchB = 0b100
 };
 
-enum Timer16BitInterruptMode
+enum TIMER_16Bit_InterruptMode
 {
-	Timer16Bit_NoInterrupts =	    0b000000,
-	Timer16Bit_TimerOverflow =		0b000001,
-	Timer16Bit_TimerCompareMatchA = 0b000010,
-	Timer16Bit_TimerCompareMatchB = 0b000100,
-	Timer16Bit_TimerCaptureEvent =  0b100000
+	TIMER_16Bit_NoInterrupts	   = 0b000000,
+	TIMER_16Bit_TimerOverflow      = 0b000001,
+	TIMER_16Bit_TimerCompareMatchA = 0b000010,
+	TIMER_16Bit_TimerCompareMatchB = 0b000100,
+	TIMER_16Bit_TimerCaptureEvent  = 0b100000
 };
 
-enum InputCaptureEdge
+enum TIMER_InputCaptureEdge
 {
-	Timer16Bit_InputCaptureFallingEdge = 0b0,
-	Timer16Bit_InputCaptureRisingEdge =  0b1
+	TIMER_16Bit_InputCaptureFallingEdge = 0b0,
+	TIMER_16Bit_InputCaptureRisingEdge =  0b1
 };
 
-#define timerOverflowInterruptIsExecuting(timer_number)			IS_BIT_CLEARED_AT(TIFR##timer_number,0)
-#define timerCompareMathAOccurred(timer_number)					IS_BIT_CLEARED_AT(TIFR##timer_number,1)
-#define timerCompareMathBOccurred(timer_number)					IS_BIT_CLEARED_AT(TIFR##timer_number,2)
+#define TIMER_overflowInterruptIsExecuting(timer_number)			IS_BIT_CLEARED_AT(TIFR##timer_number,0)
+#define TIMER_compareMathA_Occurred(timer_number)					IS_BIT_CLEARED_AT(TIFR##timer_number,1)
+#define TIMER_compareMathB_Occurred(timer_number)					IS_BIT_CLEARED_AT(TIFR##timer_number,2)
 
-#define getTimerActualValue(timer_number)						TCNT##timer_number
-#define setTimerActualValue(timer_number,value)					TCNT##timer_number = value;
+#define TIMER_getCounterActualValue(timer_number)						TCNT##timer_number
+#define TIMER_setCounterActualValue(timer_number,value)					TCNT##timer_number = value;
+//TODO:
+//add argument timer_number
+#define TIMER_forceCompareMatchA()								SET_BIT_AT(TCCR0B,7)
+#define TIMER_forceCompareMatchB()								SET_BIT_AT(TCCR0B,6)
 
-#define Timer0_forceCompareMatchA()								SET_BIT_AT(TCCR0B,7)
-#define Timer0_forceCompareMatchB()								SET_BIT_AT(TCCR0B,6)
+#define TIMER_waitForCounterOverflow_Interrupt(timer_number)				while( IS_BIT_CLEARED_AT(TIFR##timer_number,0) )
+#define TIMER_waitForCompareMathA_Interrupt(timer_number)			while( IS_BIT_CLEARED_AT(TIFR##timer_number,1) )
+#define TIMER_waitForCompareMathB_Interrupt(timer_number)			while( IS_BIT_CLEARED_AT(TIFR##timer_number,2) )
 
-#define waitForTimerOverflowInterrupt(timer_number)				while( IS_BIT_SET_AT(TIFR##timer_number,0) )
-#define waitForTimerCompareMathAInterrupt(timer_number)			while( IS_BIT_SET_AT(TIFR##timer_number,1) )
-#define waitForTimerCompareMathBInterrupt(timer_number)			while( IS_BIT_SET_AT(TIFR##timer_number,2) )
+#define TIMER_waitForCounterValue(timer_number,expected_value)	while(TCNT##timer_number < expected_value)
 
-#define waitForTimerCounterValue(timer_number,expected_value)	while(TCNT##timer_number < expected_value)
+#define TIMER_resetCounterOverflow_InterruptFlag(timer_number)			SET_BIT_AT(TIFR##timer_number,0)
+#define TIMER_resetCompareMathA_InterruptFlag(timer_number)		SET_BIT_AT(TIFR##timer_number,1)
+#define TIMER_resetTimerCompareMathB_InterruptFlag(timer_number)		SET_BIT_AT(TIFR##timer_number,2)
 
-#define resetTimerOverflowInterruptFlag(timer_number)			SET_BIT_AT(TIFR##timer_number,0)
-#define resetTimerCompareMathAInterruptFlag(timer_number)		SET_BIT_AT(TIFR##timer_number,1)
-#define resetTimerCompareMathBInterruptFlag(timer_number)		SET_BIT_AT(TIFR##timer_number,2)
+//TODO:
+//change to 16bit timer and allow the user to select an argument
+#define TIMER_getInputCompareValue()								ICR1
 
-#define getTimer1InputCompareValue()							ICR1
-
-#define forceCompareMatchA()									SET_BIT_AT(TCCR1C,7)
-#define forceCompareMatchB()									SET_BIT_AT(TCCR1C,6)
+#define TIMER_forceCompareMatchA()									SET_BIT_AT(TCCR1C,7)
+#define TIMER_forceCompareMatchB()									SET_BIT_AT(TCCR1C,6)
+//
 
 //Synchronization utilites
 //set 1 resets prescaler
 //PSRASY - timer2
 //PSRSYNC - timer1 and timer0
 //TSM halts timers
-#define haltAllTimers()											setBitsAt((volatile uint8_t*)&GTCCR,TSM,PSRASY,PSRSYNC)
-#define haltTimer2()											setBitsAt((volatile uint8_t*)&GTCCR,TSM,PSRASY)
-#define haltTimer0AndTimer1()									setBitsAt((volatile uint8_t*)&GTCCR,TSM,PSRSYNC)
+#define TIMER_haltAll()											setBitsAt((register_t*)&GTCCR,TSM,PSRASY,PSRSYNC)
+#define TIMER_haltAsynchronousTimer()											setBitsAt((register_t*)&GTCCR,TSM,PSRASY)
+#define TIMER_haltSynchronousTimers()									setBitsAt((register_t*)&GTCCR,TSM,PSRSYNC)
 
-#define releaseAllTimers()										WIPE_REGISTER(GTCCR)
-#define resetAllTimers()										releaseAllTimers()
-#define runAllTimers()											releaseAllTimers()
+//add macro/function which sets a OCRn /IRCn value
 
-#define resetTimer2Prescaler()									SET_BIT_AT(GTCCR,PSRASY)
-#define resetTimer1AndTimer0Prescaler()							SET_BIT_AT(GTCCR,PSRSYNC)
+#define TIMER_releaseAll()										WIPE_REGISTER(GTCCR)
+#define TIMER_resetAll()										TIMER_releaseAll()
+#define TIMER_runAll()											TIMER_releaseAll()
 
+#define TIMER_resetAsynchronousPrescaler()									SET_BIT_AT(GTCCR,PSRASY)
+#define TIMER_resetSynchronousPrescaler()							SET_BIT_AT(GTCCR,PSRSYNC)
+
+//TODO: Async compare match ? 
 #define timer2ForceCompareMatchA()								SET_BIT_AT(TCCR2B,7)
 #define timer2ForceCompareMatchB()								SET_BIT_AT(TCCR2B,6)
-
-struct Timer0Setup_struct
+//
+//SKONCZY£EM TUTAJ
+//TODO: maybe delete struct for timer2 
+//and create functions for use_external_clock_
+struct TIMER_0Setup_struct
 {
-	enum Timer8BitMode mode_;
-	enum Timer8BitInterruptMode interrupt_mode_;
+	enum TIMER_8BitMode mode_;
+	enum TIMER_8Bit_InterruptMode interrupt_mode_;
 	
-	enum Timer0Prescaler prescaler_;
+	enum TIMER_SynchronousPrescaler prescaler_;
 	uint8_t custom_compare_value_A_;
 	uint8_t custom_compare_value_B_;
 	
-	enum Timer_PinsUnderControl pins_under_control_;
-	enum TimerPinMode pin_A_mode_;
-	enum TimerPinMode pin_B_mode_;
+	enum TIMER_PinsUnderControl pins_under_control_;
+	enum TIMER_PinMode pin_A_mode_;
+	enum TIMER_PinMode pin_B_mode_;
 };
 
-typedef struct Timer0Setup_struct Timer0Setup;
+typedef struct TIMER_0Setup_struct Timer0Setup;
 extern Timer0Setup Timer0_DefaultSettings;
-
-struct Timer16BitSetup_struct
-{
-	enum Timer16BitMode mode_;
-	enum Timer16BitInterruptMode interrupt_mode_;
-	
-	enum Timer1Prescaler prescaler_;
-	uint16_t custom_output_compare_value_A_;
-	uint16_t custom_output_compare_value_B_;
-	uint16_t custom_input_compare_value_;
-	
-	enum Timer_PinsUnderControl pins_under_control_;
-	enum TimerPinMode pin_A_mode_;
-	enum TimerPinMode pin_B_mode_;
-	
-	bool input_compare_filtration_;
-	enum InputCaptureEdge edge_mode_;
-};
-
-typedef struct Timer16BitSetup_struct Timer16BitSetup;
-extern Timer16BitSetup Timer16bit_DefaultSettings;
 
 struct Timer2Setup_struct
 {
-	enum Timer8BitMode mode_;
-	enum Timer8BitInterruptMode interrupt_mode_;
+	enum TIMER_8BitMode mode_;
+	enum TIMER_8Bit_InterruptMode interrupt_mode_;
 	
-	enum Timer2Prescaler prescaler_;
+	enum TIMER_AsyncPrescaler prescaler_;
 	uint8_t custom_compare_value_A_;
 	uint8_t custom_compare_value_B_;
 	
-	enum Timer_PinsUnderControl pins_under_control_;
-	enum TimerPinMode pin_A_mode_;
-	enum TimerPinMode pin_B_mode_;
+	enum TIMER_PinsUnderControl pins_under_control_;
+	enum TIMER_PinMode pin_A_mode_;
+	enum TIMER_PinMode pin_B_mode_;
 	
 	bool use_external_clock_;
 	bool use_asynchronous_mode_;
@@ -234,10 +222,31 @@ struct Timer2Setup_struct
 
 typedef struct Timer2Setup_struct Timer2Setup;
 extern Timer2Setup Timer2_DefaultSettings;
+///
+struct TIMER_16BitSetup_struct
+{
+	enum TIMER_16BitMode mode_;
+	enum TIMER_16Bit_InterruptMode interrupt_mode_;
+	
+	enum TIMER_SynchronousPrescaler prescaler_;
+	uint16_t custom_output_compare_value_A_;
+	uint16_t custom_output_compare_value_B_;
+	uint16_t custom_input_compare_value_;
+	
+	enum TIMER_PinsUnderControl pins_under_control_;
+	enum TIMER_PinMode pin_A_mode_;
+	enum TIMER_PinMode pin_B_mode_;
+	
+	bool input_compare_filtration_;
+	enum TIMER_InputCaptureEdge edge_mode_;
+};
 
-void timer0Init(Timer0Setup setup,bool halt_all_timers_before_begin);
-void timer1Init(Timer16BitSetup setup,bool halt_all_timers_before_begin);
+typedef struct TIMER_16BitSetup_struct TIMER_16BitSetup;
+extern TIMER_16BitSetup TIMER_16bit_DefaultSettings;
 
-void timer2Init(Timer2Setup setup,bool halt_all_timers_before_begin);
+void TIMER_0Init(Timer0Setup setup,bool halt_all_timers_before_begin);
+void TIMER_1Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
+
+void TIMER_2Init(Timer2Setup setup,bool halt_all_timers_before_begin);
 
 #endif /* TIMER_H_INCLUDED */

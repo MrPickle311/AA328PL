@@ -15,100 +15,12 @@
 #include <stdfix-gcc.h>
 #include "comparator.h"
 #include "usart.h"
-
-
-//#include "lcd.h"
-#include <stdio.h>
-
-#define LEDDISPNO	4
-
-volatile uint8_t LEDDIGITS[LEDDISPNO];
-
-//Cyfry 0,1,2,3,4,5,6,7,8,9 i symbol -
-static const uint8_t __flash DIGITS[11]={0xC0, 0xF9, 0xA4, 0xB0, 0x99, 0x92, 0x82, 0xF8, 0x80, 0x90, 0xBF};
-const uint8_t DP=0x80;
-
-struct ISR_Status
-{
-	uint8_t no : 4;
-	uint8_t byte : 1;
-};
-
-static inline void SPI_Set_SS()
-{
-	PORTB|=_BV(PB2);
-}
-
-static inline void SPI_Reset_SS()
-{
-	PORTB&=~(_BV(PB2));
-}
-/*
-ISR(SPI_STC_vect)
-{
-	static struct ISR_Status status;
-
-	if(status.byte==0)
-	{
-		SPI_Set_SS();          //Przepisz zawartoœæ rejestru do zatrzasków wyjœciowych
-		asm volatile ("nop");  //Konieczne ze wzglêdu na synchronizator
-		SPI_Reset_SS();        //Wsuwamy now¹ wartoœæ
-		uint8_t tmp=0xFF;
-		uint8_t val=LEDDIGITS[status.no];  //Cyfra do wyœwietlenia
-		if((val & 0x7F)<11) tmp=DIGITS[val & 0x7F]; //Jej reprezentacja na LED
-		if(val & DP) tmp&=~(DP); //Kropka dziesiêtna
-		SPDR=tmp;  //Wyœlij dane o wyœwietlanej cyfrze
-	}
-	else
-	{
-		SPDR=~(1<<status.no);	//Wybierz wyœwietlacz
-		status.no=(status.no+1)%LEDDISPNO;
-	}
-	status.byte^=1;
-}
-*/
-void SPI_master_init()
-{
-	SPI_Set_SS();
-	DDRB|=(_BV(PB2) | _BV(PB3) | _BV(PB5));	//Piny SS, MOSI, SCK jako wyjœcie
-	SPCR=_BV(SPIE) | _BV(SPE) | _BV(MSTR); //Tryb master, CLK/128, przerwania
-	SPCR|=_BV(SPR1) | _BV(SPR0);
-	SPSR;
-	SPDR; //Skasuj flagê SPIF
-}
-
-
-void adc_init()
-{
-	ADMUX=_BV(REFS0)  | 0b0011 ; // Wew. referencyjne, kana³ 5, wyrównanie do prawej
-	ADCSRA=_BV(ADEN) | _BV(ADIE) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
-	// W³¹cz ADC, przerwania, preskaler 128
-	ADCSRA|= _BV(ADATE) ;
-	ADCSRA |=  _BV(ADSC);
-}
-
+#include "port.h"
 
 #define NOOFSAMPLES 128
 volatile uint32_t adc_val;
 
-/*
-ISR(ADC_vect)
-{
-	static uint32_t adc_accum;
-	static uint8_t  sample_nmbr;
-	
-	adc_accum += ADC;
-	
-	++sample_nmbr;
-	
-	if(sample_nmbr == NOOFSAMPLES)
-	{
-		adc_val = adc_accum;
-		adc_accum = 0;
-		sample_nmbr = 0;
-	}
-}
-*/
+volatile bool delay_flag = false;
 
 void my_handler(uint16_t value)
 {
@@ -137,29 +49,20 @@ void getVoltage(uint8_t* first,uint16_t* last)
 	}
 }
 
-/*
-void ADC_init()
+void delay()//funkcja realizuj¹ca opóŸnienie
 {
-	ADMUX |= _BV(REFS0);
-	ADCSRA |= _BV(ADPS2);
-	ADCSRA |= _BV(ADEN); 
+	while(delay_flag == false);
+	delay_flag = false;
 }
-*/
+
+ISR (TIMER1_COMPA_vect)
+{
+	delay_flag = true;//przerwij pêtlê while w funkcji delay
+}
 
 int main()
 {
 	/*
-	SPI_master_init();
-
-	sei();
-
-	LEDDIGITS[0]=1;
-	LEDDIGITS[1]=2;
-	LEDDIGITS[2]=3;
-	LEDDIGITS[3]=4;
-
-	SPDR=0; //Zainicjuj przerwania SPI
-	*/
 	
 	//Timer1Setup timer = Timer1_DefaultSettings;
 	//timer.mode_ = Timer16Bit_CTC_Input;
@@ -216,5 +119,28 @@ int main()
 		//sprintf(&lcd.top_line,"vol : %d,%d V",first,last);
 		//LCD_display(&lcd);
 		_delay_ms(500);
+	}
+	*/
+	
+	TIMER_16BitSetup timer1 = TIMER_16bit_DefaultSettings;
+	timer1.mode_ = TIMER_16Bit_CTC_Output;
+	timer1.prescaler_ = TIMER_Synchronous_Prescaler1024;
+	timer1.interrupt_mode_ = TIMER_16Bit_TimerCompareMatchA;
+	timer1.custom_output_compare_value_A_ = 15624*0.1;
+
+	TIMER_1Init(timer1,false);
+	
+	PORT_setPinAsOutput(PORT_CONFIG(B),5);
+	PORT_setPinLow(PORT_STATE(B),5);
+	//sei();
+	
+	while(1)
+	{
+		//delay();
+		TIMER_waitForCompareMathA_Interrupt(1);
+		TIMER_resetCompareMathA_InterruptFlag(1);
+	    //while ( (TIFR1 & (1 << OCF1A) ) == 0);//tak siê oczekuje
+		//TIFR1 |= (1 << OCF1A);
+		PORT_invertPin(PORT_STATE(B),5);
 	}
 }
