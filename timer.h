@@ -246,7 +246,18 @@ extern TIMER_16BitSetup TIMER_16bit_DefaultSettings;
 
 void TIMER_0Init(Timer0Setup setup,bool halt_all_timers_before_begin);
 void TIMER_1Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
-
 void TIMER_2Init(Timer2Setup setup,bool halt_all_timers_before_begin);
+
+#ifdef MCU_328PB
+
+void TIMER_3Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
+void TIMER_4Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
+
+#endif
+
+#define TIMER_CounterOverflow_Interrupt(timer_number)	ISR(TIMER##timer_number##_OVF_vect)
+#define TIMER_CompareMatchA_Interrupt(timer_number)		ISR(TIMER##timer_number##_COMPA_vect)
+#define TIMER_CompareMatchB_Interrupt(timer_number)		ISR(TIMER##timer_number##_COMPB_vect)
+#define TIMER_InputCapture_Interrupt(timer_number)		ISR(TIMER##timer_number##_CAPT_vect)
 
 #endif /* TIMER_H_INCLUDED */
