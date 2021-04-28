@@ -10,7 +10,7 @@
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
-#include "ports.h"
+#include "global_utils.h"
 #include <stdbool.h>
 
 //some human-readable macro definitions

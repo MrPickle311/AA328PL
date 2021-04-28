@@ -96,6 +96,7 @@ enum TIMER_SynchronousPrescaler
 	TIMER_Synchronous_ExternalClockSourceT0RisingEdge  = 0b111
 };
 
+//prescaler for the timer 2 
 enum TIMER_AsyncPrescaler
 {
 	TIMER_Async_Disabled      = 0b000,
@@ -128,65 +129,100 @@ enum TIMER_16Bit_InterruptMode
 
 enum TIMER_InputCaptureEdge
 {
-	TIMER_16Bit_InputCaptureFallingEdge = 0b0,
-	TIMER_16Bit_InputCaptureRisingEdge =  0b1
+	TIMER_16Bit_InputCapture_FallingEdge = 0b0,
+	TIMER_16Bit_InputCapture_RisingEdge =  0b1
 };
 
-#define TIMER_overflowInterruptIsExecuting(timer_number)			IS_BIT_CLEARED_AT(TIFR##timer_number,0)
-#define TIMER_compareMathA_Occurred(timer_number)					IS_BIT_CLEARED_AT(TIFR##timer_number,1)
-#define TIMER_compareMathB_Occurred(timer_number)					IS_BIT_CLEARED_AT(TIFR##timer_number,2)
+//checking whether a timer interrupt happens 
 
-#define TIMER_getCounterActualValue(timer_number)						TCNT##timer_number
-#define TIMER_setCounterActualValue(timer_number,value)					TCNT##timer_number = value;
-//TODO:
-//add argument timer_number
-#define TIMER_forceCompareMatchA()								SET_BIT_AT(TCCR0B,7)
-#define TIMER_forceCompareMatchB()								SET_BIT_AT(TCCR0B,6)
+#define TOVn_pos  0
+#define OCFnA_pos 1
+#define OCFnB_pos 2
+#define ICFn_pos  5
 
-#define TIMER_waitForCounterOverflow_Interrupt(timer_number)				while( IS_BIT_CLEARED_AT(TIFR##timer_number,0) )
-#define TIMER_waitForCompareMathA_Interrupt(timer_number)			while( IS_BIT_CLEARED_AT(TIFR##timer_number,1) )
-#define TIMER_waitForCompareMathB_Interrupt(timer_number)			while( IS_BIT_CLEARED_AT(TIFR##timer_number,2) )
+#define TIMER_overflowInterrupt_Occured(timer_number)				IS_BIT_SET_AT(TIFR##timer_number, TOVn_pos)
+#define TIMER_outputCompareMathA_Occurred(timer_number)				IS_BIT_SET_AT(TIFR##timer_number, OCFnA_pos)
+#define TIMER_outputCompareMathB_Occurred(timer_number)				IS_BIT_SET_AT(TIFR##timer_number, OCFnB_pos)
+#define TIMER_inputCaptureInterrupt_Occurred(timer_number)			IS_BIT_SET_AT(TIFR##timer_number, ICFn_pos)
 
-#define TIMER_waitForCounterValue(timer_number,expected_value)	while(TCNT##timer_number < expected_value)
+//waiting for a timer interrupt
 
-#define TIMER_resetCounterOverflow_InterruptFlag(timer_number)			SET_BIT_AT(TIFR##timer_number,0)
-#define TIMER_resetCompareMathA_InterruptFlag(timer_number)		SET_BIT_AT(TIFR##timer_number,1)
-#define TIMER_resetTimerCompareMathB_InterruptFlag(timer_number)		SET_BIT_AT(TIFR##timer_number,2)
+#define TIMER_waitFor_CounterOverflow_Interrupt(timer_number)		while( ! TIMER_overflowInterrupt_Occured(timer_number) )
+#define TIMER_waitFor_CompareMathA_Interrupt(timer_number)			while( ! TIMER_outputCompareMathA_Occurred(timer_number) )//while( IS_BIT_CLEARED_AT(TIFR##timer_number,1) )
+#define TIMER_waitFor_CompareMathB_Interrupt(timer_number)			while( ! TIMER_outputCompareMathB_Occurred(timer_number) )
+#define TIMER_waitFor_InputCapture_Interrupt(timer_number)			while( ! TIMER_inputCaptureInterrupt_Occurred(timer_number) )
 
-//TODO:
-//change to 16bit timer and allow the user to select an argument
-#define TIMER_getInputCompareValue()								ICR1
+//reseting interrupt flags
 
-#define TIMER_forceCompareMatchA()									SET_BIT_AT(TCCR1C,7)
-#define TIMER_forceCompareMatchB()									SET_BIT_AT(TCCR1C,6)
-//
+#define TIMER_resetCounterOverflow_InterruptFlag(timer_number)		SET_BIT_AT(TIFR##timer_number, TOVn_pos)
+#define TIMER_resetCompareMathA_InterruptFlag(timer_number)			SET_BIT_AT(TIFR##timer_number, OCFnA_pos)
+#define TIMER_resetCompareMathB_InterruptFlag(timer_number)			SET_BIT_AT(TIFR##timer_number, OCFnB_pos)
+#define TIMER_inputCapture_InterruptFlag(timer_number)				SET_BIT_AT(TIFR##timer_number, ICFn_pos)
 
-//Synchronization utilites
-//set 1 resets prescaler
-//PSRASY - timer2
-//PSRSYNC - timer1 and timer0
-//TSM halts timers
-#define TIMER_haltAll()											setBitsAt((register_t*)&GTCCR,TSM,PSRASY,PSRSYNC)
-#define TIMER_haltAsynchronousTimer()											setBitsAt((register_t*)&GTCCR,TSM,PSRASY)
-#define TIMER_haltSynchronousTimers()									setBitsAt((register_t*)&GTCCR,TSM,PSRSYNC)
+//getters and setters for a timer current counter value 
 
-//add macro/function which sets a OCRn /IRCn value
+#define TIMER_getCounterActual_Value(timer_number)					TCNT##timer_number
+#define TIMER_setCounterActual_Value(timer_number, value)			TCNT##timer_number = value;
+
+#define TIMER_16Bit_getInputCompare_Value(timer_number)				ICR##timer_number
+#define TIMER_16Bit_setInputCompare_Value(timer_number, value)		ICR##timer_number = value
+
+#define TIMER_getOutputCompareA_Value(timer_number)					OCR##timer_number##A
+#define TIMER_setOutputCompareA_Value(timer_number, value)			OCR##timer_number##A = value
+
+#define TIMER_getOutputCompareB_Value(timer_number)					OCR##timer_number##B
+#define TIMER_setOutputCompareB_Value(timer_number, value)			OCR##timer_number##B = value
+
+//force compare match for a timers
+
+#define FOCnA_pos 7
+#define FOCnB_pos 6
+
+#define TIMER_8Bit_forceCompareMatchA(timer_number)					SET_BIT_AT(TCCR##timer_number##B, FOCnA_pos)
+#define TIMER_8Bit_forceCompareMatchB(timer_number)					SET_BIT_AT(TCCR##timer_number##B, FOCnB_pos)
+
+#define TIMER_16Bit_forceCompareMatchA(timer_number)				SET_BIT_AT(TCCR##timer_number##C, FOCnA_pos)
+#define TIMER_16Bit_forceCompareMatchB(timer_number)				SET_BIT_AT(TCCR##timer_number##C, FOCnB_pos)
+
+//waiting for a expected_value in a timer counter
+
+#define TIMER_waitForCounterValue(timer_number,expected_value)		while(TCNT##timer_number != expected_value)
+#define TIMER_waitForCounterReset(timer_number)						while(TCNT##timer_number != 0)
+
+//timer settings changing in a runtime 
+
+//input capture edge changing
+#define ICESn_pos 6
+
+#define TIMER_16Bit_setInputCapture_FallingEdge(timer_number)		CLEAR_BIT_AT(TCCR##timer_number##B, ICESn_pos)
+#define TIMER_16Bit_setInputCapture_RisingEdge(timer_number)		SET_BIT_AT(TCCR##timer_number##B, ICESn_pos)
+
+//pin mode changing
+
+#define COMnA_start_pos 6
+#define COMnB_start_pos 4
+
+//changing a pin mode automaticaly enables a pin control
+#define TIMER_changePinA_Mode(timer_number, pin_A_mode)				SET_SHIFTED_BIT_MASK(TCCR##timer_number##A, pin_A_mode, COMnA_start_pos)		
+#define TIMER_changePinB_Mode(timer_number, pin_B_mode)				SET_SHIFTED_BIT_MASK(TCCR##timer_number##A, pin_B_mode, COMnB_start_pos)
+
+#define TIMER_disablePinControl(timer_number, pins_under_control)	FILTER_BIT_MASK(TCCR##timer_number##A, GET_REVERSE_MASK_OF(pins_under_control))
+
+//Synchronization tools
+#define TIMER_haltAll()											setBitsAt(&GTCCR,TSM,PSRASY,PSRSYNC)
+#define TIMER_haltAsynchronousTimer()							setBitsAt(&GTCCR,TSM,PSRASY)
+#define TIMER_haltSynchronousTimers()							setBitsAt(&GTCCR,TSM,PSRSYNC)
 
 #define TIMER_releaseAll()										WIPE_REGISTER(GTCCR)
 #define TIMER_resetAll()										TIMER_releaseAll()
 #define TIMER_runAll()											TIMER_releaseAll()
 
-#define TIMER_resetAsynchronousPrescaler()									SET_BIT_AT(GTCCR,PSRASY)
-#define TIMER_resetSynchronousPrescaler()							SET_BIT_AT(GTCCR,PSRSYNC)
+#define TIMER_resetAsynchronousPrescaler()						SET_BIT_AT(GTCCR,PSRASY)
+#define TIMER_resetSynchronousPrescaler()						SET_BIT_AT(GTCCR,PSRSYNC)
 
-//TODO: Async compare match ? 
-#define timer2ForceCompareMatchA()								SET_BIT_AT(TCCR2B,7)
-#define timer2ForceCompareMatchB()								SET_BIT_AT(TCCR2B,6)
-//
-//SKONCZY£EM TUTAJ
-//TODO: maybe delete struct for timer2 
-//and create functions for use_external_clock_
-struct TIMER_0Setup_struct
+////////////////////////////////////////////////////////////////////////// TIMER SETUP SECTION
+
+struct TIMER_0_Setup_struct
 {
 	enum TIMER_8BitMode mode_;
 	enum TIMER_8Bit_InterruptMode interrupt_mode_;
@@ -200,10 +236,10 @@ struct TIMER_0Setup_struct
 	enum TIMER_PinMode pin_B_mode_;
 };
 
-typedef struct TIMER_0Setup_struct Timer0Setup;
-extern Timer0Setup Timer0_DefaultSettings;
+typedef struct TIMER_0_Setup_struct TIMER_0_Setup;
+extern TIMER_0_Setup TIMER_0_DefaultSettings;
 
-struct Timer2Setup_struct
+struct TIMER_2_Setup_struct
 {
 	enum TIMER_8BitMode mode_;
 	enum TIMER_8Bit_InterruptMode interrupt_mode_;
@@ -220,9 +256,11 @@ struct Timer2Setup_struct
 	bool use_asynchronous_mode_;
 };
 
-typedef struct Timer2Setup_struct Timer2Setup;
-extern Timer2Setup Timer2_DefaultSettings;
-///
+typedef struct TIMER_2_Setup_struct TIMER_2_Setup;
+extern TIMER_2_Setup TIMER_2_DefaultSettings;
+
+//16 bit timers setup
+
 struct TIMER_16BitSetup_struct
 {
 	enum TIMER_16BitMode mode_;
@@ -244,14 +282,21 @@ struct TIMER_16BitSetup_struct
 typedef struct TIMER_16BitSetup_struct TIMER_16BitSetup;
 extern TIMER_16BitSetup TIMER_16bit_DefaultSettings;
 
-void TIMER_0Init(Timer0Setup setup,bool halt_all_timers_before_begin);
-void TIMER_1Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
-void TIMER_2Init(Timer2Setup setup,bool halt_all_timers_before_begin);
+void TIMER_0_Init(TIMER_0_Setup setup,bool halt_all_timers_before_begin);
+void TIMER_1_Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
+void TIMER_2_Init(TIMER_2_Setup setup,bool halt_all_timers_before_begin);
+
+void TIMER_0_TurnOff();
+void TIMER_1_TurnOff();
+void TIMER_2_TurnOff();
 
 #ifdef MCU_328PB
 
-void TIMER_3Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
-void TIMER_4Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
+void TIMER_3_Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
+void TIMER_4_Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin);
+
+void TIMER_3_TurnOff();
+void TIMER_4_TurnOff();
 
 #endif
 

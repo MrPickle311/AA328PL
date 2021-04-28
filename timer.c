@@ -4,9 +4,9 @@
 
 #define power_timer_enable(n) power_timer##n##_enable()
 
-Timer0Setup Timer0_DefaultSettings = {0x0, 0x0, 0x0, 255, 255, 0x0, 0x0, 0x0};
-TIMER_16BitSetup TIMER_16bit_DefaultSettings  = {0x0, 0x0, 0x0, 0xFFFF, 0xFFFF, 0xFFFF, 0x0, 0x0, 0x0, false, TIMER_16Bit_InputCaptureFallingEdge};
-Timer2Setup Timer2_DefaultSettings = {0x0, 0x0, 0x0, 255, 255, 0x0, 0x0, 0x0,false, false};	
+TIMER_0_Setup TIMER_0_DefaultSettings = {0x0, 0x0, 0x0, 255, 255, 0x0, 0x0, 0x0};
+TIMER_16BitSetup TIMER_16bit_DefaultSettings  = {0x0, 0x0, 0x0, 0xFFFF, 0xFFFF, 0xFFFF, 0x0, 0x0, 0x0, false, TIMER_16Bit_InputCapture_FallingEdge};
+TIMER_2_Setup TIMER_2_DefaultSettings = {0x0, 0x0, 0x0, 255, 255, 0x0, 0x0, 0x0,false, false};	
 
 #define NOT_SHIFT 0
 
@@ -164,9 +164,26 @@ static inline void _setTimerInputCapture_16Bit_impl(register_t* TCCRnB_reg,
 								         input_compare_filtration,\
 								         edge_mode)
 
+//turing off implementations
+
+#define _timer_8Bit_turn_off_impl(timer_number)\
+		WIPE_REGISTER(TCCR##timer_number##A);\
+		WIPE_REGISTER(TCCR##timer_number##B);\
+		WIPE_REGISTER(TIMSK##timer_number);\
+		WIPE_REGISTER(TIFR##timer_number);\
+		WIPE_REGISTER(TCNT##timer_number);\
+		WIPE_REGISTER(OCR##timer_number##A);\
+		WIPE_REGISTER(OCR##timer_number##B)
+
+//common things between 8bit and 16bit timers
+#define _timer_16Bit_turn_off_impl(timer_number) \
+		_timer_8Bit_turn_off_impl(timer_number);\
+		WIPE_REGISTER(TCCR##timer_number##C);\
+		WIPE_REGISTER(ICR##timer_number)
+
 ////////////////////// concrete timer initializations
 
-void TIMER_0Init(Timer0Setup setup, bool halt_all_timers_before_begin)
+void TIMER_0_Init(TIMER_0_Setup setup, bool halt_all_timers_before_begin)
 {
 	power_timer_enable(0);
 
@@ -183,7 +200,7 @@ void TIMER_0Init(Timer0Setup setup, bool halt_all_timers_before_begin)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static inline void _setupTimerAsyncExternalClock(Timer2Setup setup)
+static inline void _setupTimerAsyncExternalClock(TIMER_2_Setup setup)
 {
 	if(setup.use_asynchronous_mode_ && setup.use_external_clock_)
 	{
@@ -196,7 +213,7 @@ static inline void _setupTimerAsyncExternalClock(Timer2Setup setup)
 		SET_BIT_AT(ASSR, AS2);
 }
 
-void TIMER_2Init(Timer2Setup setup,bool halt_all_timers_before_begin)
+void TIMER_2_Init(TIMER_2_Setup setup,bool halt_all_timers_before_begin)
 {
 	power_timer_enable(2);
 
@@ -212,9 +229,27 @@ void TIMER_2Init(Timer2Setup setup,bool halt_all_timers_before_begin)
 	_setupTimerAsyncExternalClock(setup);
 }
 
+
+void TIMER_0_TurnOff()
+{
+	_timer_8Bit_turn_off_impl(0);
+}
+
+
+void TIMER_1_TurnOff()
+{
+	_timer_16Bit_turn_off_impl(1);
+}
+
+
+void TIMER_2_TurnOff()
+{
+	_timer_8Bit_turn_off_impl(2);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TIMER_1Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
+void TIMER_1_Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
 {
 	power_timer_enable(1);
 
@@ -237,7 +272,7 @@ void TIMER_1Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
 
 #ifdef MCU_328PB
 
-void TIMER_3Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
+void TIMER_3_Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
 {
 	power_timer_enable(3);
 
@@ -259,7 +294,7 @@ void TIMER_3Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
 	_setTimerInterruptMode(3, setup.interrupt_mode_);
 }
 
-void TIMER_4Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
+void TIMER_4_Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
 {
 	power_timer_enable(4);
 
@@ -279,6 +314,18 @@ void TIMER_4Init(TIMER_16BitSetup setup,bool halt_all_timers_before_begin)
 		TIMER_haltAll();
 
 	_setTimerInterruptMode(4, setup.interrupt_mode_);
+}
+
+
+void TIMER_3_TurnOff()
+{
+	_timer_16Bit_turn_off_impl(3);
+}
+
+
+void TIMER_4_TurnOff()
+{
+	_timer_16Bit_turn_off_impl(4);
 }
 
 #endif

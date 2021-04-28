@@ -24,7 +24,7 @@
 #define EXTRACT_BIT_FROM(target,pos)					target & BIT_MASK_OF(pos)
 
 #define REVERSE_MASK(mask)								( mask ^= 0xFF )
-
+#define GET_REVERSE_MASK_OF(mask)						( mask ^  0xFF)
 
 #define WIPE_REGISTER(target)							target = 0x0
 #define FILL_REGISTER(target)							target = 0xFF

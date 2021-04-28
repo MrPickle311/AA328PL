@@ -130,7 +130,7 @@ int main()
 	timer1.pins_under_control_ = TIMER_BothPins;
 	timer1.custom_output_compare_value_A_ = 15000;//15624*1.75;
 
-	TIMER_1Init(timer1,false);
+	TIMER_1_Init(timer1,false);
 	
 	PORT_setPinAsOutput(PORT_CONFIG(B),5);
 	PORT_setPinLow(PORT_STATE(B),5);
@@ -140,22 +140,27 @@ int main()
 	DDRB |= _BV(DDB1);
 	DDRD |= _BV(DDD6);
 	
-	Timer0Setup timer0 = Timer0_DefaultSettings;
+	TIMER_0_Setup timer0 = TIMER_0_DefaultSettings;
 	timer0.mode_ = TIMER_8Bit_CTC;
 	timer0.custom_compare_value_A_ = 244;
 	timer0.prescaler_ = TIMER_Synchronous_Prescaler1024;
 	timer0.interrupt_mode_ = TIMER_8Bit_CompareMatchA;
 	timer0.pin_A_mode_ = TIMER_CompareMatchToogle;
 	timer0.pins_under_control_ = TIMER_OnlyPinA;
-	TIMER_0Init(timer0,false);
+	TIMER_0_Init(timer0,false);
 	
 	while(1)
 	{
 		//delay();
-		TIMER_waitForCompareMathA_Interrupt(1);
-		TIMER_resetCompareMathA_InterruptFlag(1);
+		//TIMER_waitFor_CompareMathA_Interrupt(1);
+		//TIMER_resetCompareMathA_InterruptFlag(1);
+		TIMER_waitForCounterValue(1,15000);
+		PORT_invertPin(PORT_STATE(B),5);
+		TIMER_waitForCounterReset(1);
+		//TIMER_waitForCounterValue(1,0);
+		//PORT_invertPin(PORT_STATE(B),5);
 	    //while ( (TIFR1 & (1 << OCF1A) ) == 0);//tak siê oczekuje
 		//TIFR1 |= (1 << OCF1A);
-		PORT_invertPin(PORT_STATE(B),5);
+		
 	}
 }
