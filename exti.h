@@ -13,88 +13,87 @@
 #include "global_utils.h"
 #include <stdbool.h>
 
-//some human-readable macro definitions
-#define enableInterrupts() sei()
+typedef port_t EXTI_InterruptionRealPort;
 
-//supported by PD2(INT0) and PD3(INT1) 
-#define advancedInterrupt(number) ISR(INT##number##_vect)
-
-#define advancedInterruptPin2PortD advancedInterrupt(0)
-#define advancedInterruptPin3PortD advancedInterrupt(1)
-
-//basic interrupts supported by other pins
-#define basicInterrupt(number) ISR(PCINT##number##_vect)
-
-enum AdvancedInterruptActivationMode
+enum EXTI_AdvancedInterruptActivationMode
 {
-	ActivatedByLowLevel = 0b00,
-	ActivatedByAnyLogicChange = 0b01,
-	ActivatedByFallingEdge = 0b10,
-	ActivatedByRisingEdge = 0b11
+	EXTI_ActivatedByLowLevel	   = 0b00,
+	EXTI_ActivatedByAnyLogicChange = 0b01,
+	EXTI_ActivatedByFallingEdge    = 0b10,
+	EXTI_ActivatedByRisingEdge	   = 0b11
 };
 
-enum AdvancedInterruptPin
+//exti interruption flags
+
+#define EXTI_Pin2PortDAdvancedInterrupt_Occured	  IS_BIT_SET_AT(EIFR,INTF0)
+#define EXTI_Pin3PortDAdvancedInterrupt_Occured	  IS_BIT_SET_AT(EIFR,INTF1)
+
+#define EXTI_waitUntil_Pin2PortDAdvancedInterrupt while( !EXTI_Pin2PortDAdvancedInterrupt_Occured )
+#define EXTI_waitUntil_Pin3PortDAdvancedInterrupt while( !EXTI_Pin3PortDAdvancedInterrupt_Occured )
+
+#define EXTI_resetPin2PortDAdvancedInterrupt_Flag SET_BIT_AT(EIFR,INTF0)
+#define EXTI_resetPin3PortDAdvancedInterrupt_Flag SET_BIT_AT(EIFR,INTF1)
+
+#define INT0_pos 0
+#define INT1_pos 1
+
+enum EXTI_AdvancedInterruptPin
 {
-	Pin2PortDAdvancedInterrupt = 0,
-	Pin3PortDAdvancedInterrupt = 1
+	EXTI_Pin2PortDAdvancedInterrupt = INT0_pos,
+	EXTI_Pin3PortDAdvancedInterrupt = INT1_pos
 };
 
-void setupAdvancedInterrupt(enum AdvancedInterruptPin pin,enum AdvancedInterruptActivationMode mode)
-{
-	SET_BIT_AT(EIMSK,pin);
-	SET_SHIFTED_BIT_MASK(EICRA,mode,2*pin);
-}
+#define PCIE0_pos   0
+#define PCIE1_pos   1
+#define PCIE2_pos   2
+#define PCIE3_pos   3
 
-typedef volatile uint8_t* InterruptionRealPort;
-
-enum InterruptionPort
+enum EXTI_InterruptionPort
 {
-	InterruptionPortB = 0,
-	InterruptionPortC = 1,
-	InterruptionPortD = 2
+	EXTI_InterruptionPortB = PCIE0_pos,
+	EXTI_InterruptionPortC = PCIE1_pos,
+	EXTI_InterruptionPortD = PCIE2_pos
+	
+#ifdef MCU_328PB
+	,
+	EXTI_InterruptionPortE = PCIE3_pos
+#endif // MCU_328PB
 };
 
-uint8_t* __getPhysicalInterruptionPort(enum InterruptionPort port)
-{
-	switch(port)
-	{
-		case InterruptionPortB: return &PCMSK0;
-		case InterruptionPortC: return &PCMSK1;
-		case InterruptionPortD: return &PCMSK2;
-		default: return NULL;
-	}
-}
+//interruptions supported by PD2(INT0) and PD3(INT1)
 
-void __setupInterruptionPort(enum InterruptionPort interrupt_port)
-{
-	SET_BIT_AT(PCICR,interrupt_port);
-}
+#define EXTI_advancedInterruptPin2PortD ISR(INT0_vect)
+#define EXTI_advancedInterruptPin3PortD ISR(INT1_vect)
 
-void __enableInterruptPin(InterruptionRealPort interrupt_real_port,size_t pin)
-{
-	SET_BIT_AT(*interrupt_real_port,pin);
-}
+void EXTI_setupAdvancedInterrupt(enum EXTI_AdvancedInterruptPin pin,enum EXTI_AdvancedInterruptActivationMode mode);
 
-void setupBasicInterrupt(enum InterruptionPort interrupt_port,size_t pin)
-{
-	uint8_t* real_port = __getPhysicalInterruptionPort(interrupt_port);
-	__enableInterruptPin(real_port,pin);
-	__setupInterruptionPort(interrupt_port);
-}
+void EXTI_setupBasicInterrupt(enum EXTI_InterruptionPort interrupt_port,pin_t pin);
 
-void __setupBasicInterrupts(enum InterruptionPort interrupt_port,size_t pins_count,...)
-{
-	va_list valist;
-	va_start(valist,pins_count);
-	for (uint8_t i = 0; i < pins_count ; ++i)
-		setupBasicInterrupt(interrupt_port,va_arg(valist,size_t));
-	va_end(valist);
-}
+void EXTI_disableAdvancedInterrupt(enum EXTI_AdvancedInterruptPin pin);
 
-#define setupBasicInterrupts(port, ...) __setupBasicInterrupts(port, PP_NARG(__VA_ARGS__), __VA_ARGS__)
+void EXTI_disableBasicInterrupt(enum EXTI_InterruptionPort interrupt_port,pin_t pin);
 
-#define basicInterruptPortB ISR(PCINT0_vect)
-#define basicInterruptPortC ISR(PCINT1_vect)
-#define basicInterruptPortB ISR(PCINT2_vect)
+//not for user use
+void __setupBasicInterrupts(enum EXTI_InterruptionPort interrupt_port,size_t pins_count,...);
+
+void __disableBasicInterrupts(enum EXTI_InterruptionPort interrupt_port,size_t pins_count,...);
+
+//END not for user use
+
+#define EXTI_setupBasicInterrupts(port, ...) __setupBasicInterrupts(port, PP_NARG(__VA_ARGS__), __VA_ARGS__)
+
+#define EXTI_disableBasicInterrupts(port, ...) __disableBasicInterrupts(port, PP_NARG(__VA_ARGS__), __VA_ARGS__)
+
+//basic interrupts definitions 
+
+#define EXTI_basicInterruptPortB ISR(PCINT0_vect)
+#define EXTI_basicInterruptPortC ISR(PCINT1_vect)
+#define EXTI_basicInterruptPortD ISR(PCINT2_vect)
+
+#ifdef MCU_328PB
+
+#define EXTI_basicInterruptPortE ISR(PCINT3_vect)
+
+#endif
 
 #endif /* EXTERNAL_INTERRUPT_H_ */

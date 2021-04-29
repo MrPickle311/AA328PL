@@ -16,6 +16,8 @@
 
 typedef uint8_t pin_t;
 
+typedef uint8_t bit_t;
+
 typedef uint8_t mask_8bit_t;
 
 typedef uint8_t byte_t;

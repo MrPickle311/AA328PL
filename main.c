@@ -138,8 +138,8 @@ int main()
 	//sei();
 	
 	DDRB |= _BV(DDB1);
-	DDRD |= _BV(DDD6);
-	
+	DDRD |= _BV(DDD6) | _BV(DDD5);
+	PORTD &= ~ _BV(DDD5);
 	TIMER_0_Setup timer0 = TIMER_0_DefaultSettings;
 	timer0.mode_ = TIMER_8Bit_CTC;
 	timer0.custom_compare_value_A_ = 244;
