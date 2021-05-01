@@ -11,12 +11,9 @@
 #include <util/delay.h>
 #include "timer.h"
 #include "util/atomic.h"
-#include "adc.h"
-#include <stdfix-gcc.h>
-#include "comparator.h"
-#include "usart.h"
 #include "port.h"
 
+/*
 #define NOOFSAMPLES 128
 volatile uint32_t adc_val;
 
@@ -58,6 +55,77 @@ void delay()//funkcja realizuj¹ca opóŸnienie
 ISR (TIMER1_COMPA_vect)
 {
 	delay_flag = true;//przerwij pêtlê while w funkcji delay
+}
+*/
+
+
+//global
+
+#define EMPTY_LED 0
+
+const uint8_t __flash led_numbers[] = 
+{
+	BIT_MASK_OF(0) WITH BIT_MASK_OF(1) WITH BIT_MASK_OF(2) WITH BIT_MASK_OF(5) WITH BIT_MASK_OF(6) WITH BIT_MASK_OF(7),						//0
+	BIT_MASK_OF(2) WITH BIT_MASK_OF(7),																										//1
+	BIT_MASK_OF(0) WITH BIT_MASK_OF(1) WITH BIT_MASK_OF(4) WITH BIT_MASK_OF(7) WITH BIT_MASK_OF(6),											//2
+	BIT_MASK_OF(1) WITH BIT_MASK_OF(2) WITH BIT_MASK_OF(4) WITH BIT_MASK_OF(6) WITH BIT_MASK_OF(7),											//3
+	BIT_MASK_OF(2) WITH BIT_MASK_OF(4) WITH BIT_MASK_OF(5) WITH BIT_MASK_OF(7),																//4
+	BIT_MASK_OF(1) WITH BIT_MASK_OF(2) WITH BIT_MASK_OF(4) WITH BIT_MASK_OF(5) WITH BIT_MASK_OF(6),											//5
+	BIT_MASK_OF(0) WITH BIT_MASK_OF(1) WITH BIT_MASK_OF(2) WITH BIT_MASK_OF(4) WITH BIT_MASK_OF(5) WITH BIT_MASK_OF(6),						//6
+	BIT_MASK_OF(2) WITH BIT_MASK_OF(6) WITH BIT_MASK_OF(7),																					//7
+	BIT_MASK_OF(0) WITH BIT_MASK_OF(1) WITH BIT_MASK_OF(2) WITH BIT_MASK_OF(4) WITH BIT_MASK_OF(5) WITH BIT_MASK_OF(6) WITH BIT_MASK_OF(7),	//8
+	BIT_MASK_OF(2) WITH BIT_MASK_OF(4) WITH BIT_MASK_OF(5) WITH BIT_MASK_OF(6) WITH BIT_MASK_OF(7),											//9
+	EMPTY_LED																																//none 
+};
+
+#define LED_NMBR 4
+
+volatile uint16_t number = 0;
+volatile char	  led_array[LED_NMBR];
+
+//END global
+
+void initTimer1()
+{
+	TIMER_16BitSetup timer1 = TIMER_16bit_DefaultSettings;
+	timer1.mode_ = TIMER_16Bit_CTC_Output;
+	timer1.prescaler_ = TIMER_Synchronous_Prescaler1024;
+	timer1.interrupt_mode_ = TIMER_16Bit_TimerCompareMatchA;
+	timer1.custom_output_compare_value_A_ = 15624;//desired time -> 1 second ; 16*10^6 / 1024 / 1 - 1
+	TIMER_1_Init(timer1,false);
+}
+
+void initPorts()
+{
+	PORT_setPinsAsOutput(PORT_CONFIG(D),7,6,5,4,3,2,1,0);//number on led
+	PORT_setPinsAsOutput(PORT_CONFIG(C),3,2,1,0);//led selection
+	PORT_setLowPins(PORT_STATE(D),7,6,5,4,3,2,1,0);
+	PORT_setLowPins(PORT_STATE(C),3,2,1,0);
+}
+
+void wipeCharArray()
+{
+	for(uint8_t i = 0 ; i < LED_NMBR ; ++i)
+		led_array[i] = 'X';
+}
+
+void convertCharsToLedFormat()//TODO
+{
+	for(uint8_t i = 0 ; i < LED_NMBR ; ++i)
+		if(led_array[i] != 'X' && led_array[i] != 0)//sprintf ends a string with \0 char
+			led_array[i] -= '0';
+		else led_array[i] = 10;
+}
+  
+TIMER_CompareMatchA_Interrupt(1)
+{
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		++number;
+		wipeCharArray();
+		sprintf(led_array,"%d",number);
+		convertCharsToLedFormat();
+	}
 }
 
 int main()
@@ -122,45 +190,24 @@ int main()
 	}
 	*/
 	
-	TIMER_16BitSetup timer1 = TIMER_16bit_DefaultSettings;
-	timer1.mode_ = TIMER_16Bit_CTC_Output;
-	timer1.prescaler_ = TIMER_Synchronous_Prescaler1024;
-	timer1.interrupt_mode_ = TIMER_16Bit_TimerCompareMatchA;
-	timer1.pin_A_mode_ = TIMER_CompareMatchToogle;
-	timer1.pins_under_control_ = TIMER_BothPins;
-	timer1.custom_output_compare_value_A_ = 15000;//15624*1.75;
-
-	TIMER_1_Init(timer1,false);
 	
-	PORT_setPinAsOutput(PORT_CONFIG(B),5);
-	PORT_setPinLow(PORT_STATE(B),5);
+	initTimer1();
 	
-	//sei();
-	
-	DDRB |= _BV(DDB1);
-	DDRD |= _BV(DDD6) | _BV(DDD5);
-	PORTD &= ~ _BV(DDD5);
-	TIMER_0_Setup timer0 = TIMER_0_DefaultSettings;
-	timer0.mode_ = TIMER_8Bit_CTC;
-	timer0.custom_compare_value_A_ = 244;
-	timer0.prescaler_ = TIMER_Synchronous_Prescaler1024;
-	timer0.interrupt_mode_ = TIMER_8Bit_CompareMatchA;
-	timer0.pin_A_mode_ = TIMER_CompareMatchToogle;
-	timer0.pins_under_control_ = TIMER_OnlyPinA;
-	TIMER_0_Init(timer0,false);
+	initPorts();
+	sei();
+	uint8_t led_nr = 0;
 	
 	while(1)
 	{
-		//delay();
-		//TIMER_waitFor_CompareMathA_Interrupt(1);
-		//TIMER_resetCompareMathA_InterruptFlag(1);
-		TIMER_waitForCounterValue(1,15000);
-		PORT_invertPin(PORT_STATE(B),5);
-		TIMER_waitForCounterReset(1);
-		//TIMER_waitForCounterValue(1,0);
-		//PORT_invertPin(PORT_STATE(B),5);
-	    //while ( (TIFR1 & (1 << OCF1A) ) == 0);//tak siê oczekuje
-		//TIFR1 |= (1 << OCF1A);
+		for( led_nr = 0 ; led_nr < LED_NMBR ; ++led_nr)
+		{
+			PORT_clearPort(PORT_STATE(C));
+			PORT_setPinHigh(PORT_STATE(C),led_nr);
+			
+			PORT_clearPort(PORT_STATE(D));
+			PORT_setMask(PORT_STATE(D),led_numbers[led_array[led_nr]]);
+			_delay_ms(2);	
+		}
 		
 	}
 }

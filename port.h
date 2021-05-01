@@ -14,7 +14,7 @@
 #include "bit_utils.h"
 #include "global_utils.h"
 
-enum PinState
+enum PORT_PinState
 {
 	Low = 0,
 	High = 1
@@ -58,7 +58,7 @@ void PORT_setPinAsInput(port_config_t* port_config,port_state_t* port_state,enum
 
 //operations on ports
 
-void PORT_portSetMask(port_state_t* port_state,mask_8bit_t mask);
+void PORT_setMask(port_state_t* port_state,mask_8bit_t mask);
 
 void PORT_clearPort(port_state_t* port_state);
 
@@ -75,13 +75,13 @@ void  __setPinsAsInput(port_config_t* port_config,port_state_t* port_state,enum 
 
 //
 
-#define PORT_setHighPins(port_state, ...) setBitsAt(port, PP_NARG(__VA_ARGS__), __VA_ARGS__)
+#define PORT_setHighPins(port_state, ...)				   setBitsAt(port_state, __VA_ARGS__)
 
-#define PORT_setLowPins(port_state, ...) clearBitsAt(port, PP_NARG(__VA_ARGS__), __VA_ARGS__)
+#define PORT_setLowPins(port_state, ...)				   clearBitsAt(port_state, __VA_ARGS__)
 
-#define PORT_invertPins(port_state, ...) reverseBitsAt(port, PP_NARG(__VA_ARGS__), __VA_ARGS__)
+#define PORT_invertPins(port_state, ...)				   reverseBitsAt(port_state, __VA_ARGS__)
 
-#define PORT_setPinsAsOutput(port_config, ...) __setPinsAsOutput(port_config, PP_NARG(__VA_ARGS__), __VA_ARGS__)
+#define PORT_setPinsAsOutput(port_config, ...)			   __setPinsAsOutput(port_config, PP_NARG(__VA_ARGS__), __VA_ARGS__)
 
 #define PORT_setPinsAsInput(port_config,input_config, ...) __setPinsAsInput(port_config,input_config,PP_NARG(__VA_ARGS__), __VA_ARGS__)
 

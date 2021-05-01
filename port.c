@@ -59,7 +59,7 @@ void PORT_setPinAsInput(port_config_t* port_config,port_state_t* port_state,enum
 
 //operations on ports
 
-void PORT_portSetMask(port_state_t* port_state,mask_8bit_t mask)
+void PORT_setMask(port_state_t* port_state,mask_8bit_t mask)
 {
 	REPLACE_REGISTER(*port_state,mask);
 }
