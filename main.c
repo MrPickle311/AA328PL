@@ -12,6 +12,9 @@
 #include "timer.h"
 #include "util/atomic.h"
 #include "port.h"
+#include "twi_master.h"
+#include "examples/lcd.h"
+#include "i2c_comunication_master.h"
 
 /*
 #define NOOFSAMPLES 128
@@ -59,6 +62,7 @@ ISR (TIMER1_COMPA_vect)
 */
 
 
+/*MULTIPLEKSING
 //global
 
 #define EMPTY_LED 0
@@ -127,6 +131,8 @@ TIMER_CompareMatchA_Interrupt(1)
 		convertCharsToLedFormat();
 	}
 }
+*/
+
 
 int main()
 {
@@ -189,16 +195,47 @@ int main()
 		_delay_ms(500);
 	}
 	*/
+	PORT_setPinAsOutput(PORT_CONFIG(B),5);
+	twi_com_master_main();
+	LCD_State lcd;
+	lcd.address = 0x27;
+	lcd.blink_on = true;
+	sprintf(&lcd.bottom_line,"");
+	sprintf(&lcd.top_line,"");
 	
+	TWI_Setup setup = TWI_defaultSetup;
+	setup.generate_acknowledge_signal_ = true;
+	setup.use_standard_twi_speed_ = true;
+	setup.standard_speed_ = TWI_100Kbps;
 	
+	TWI_init(setup);
+	
+	//PORT_setPinHigh(PORT_STATE(B),5);
+	//_delay_ms(1000);
+	
+	//PORT_setPinLow(PORT_STATE(B),5);
+	
+	LCD_init(&lcd);
+	
+	//PORT_setPinHigh(PORT_STATE(B),5);
+	//_delay_ms(1000);
+	//PORT_setPinLow(PORT_STATE(B),5);
+	
+	sprintf(&lcd.top_line,"xd");
+	
+	LCD_display(&lcd);
+	
+	/*MULTIPLEKSING
 	initTimer1();
 	
 	initPorts();
 	sei();
 	uint8_t led_nr = 0;
+	*/
 	
 	while(1)
 	{
+		/*MULTIPLEKSING
 		for( led_nr = 0 ; led_nr < LED_NMBR ; ++led_nr)
 		{
 			PORT_clearPort(PORT_STATE(C));
@@ -208,6 +245,6 @@ int main()
 			PORT_setMask(PORT_STATE(D),led_numbers[led_array[led_nr]]);
 			_delay_ms(2);	
 		}
-		
+		*/
 	}
 }

@@ -5,28 +5,19 @@
  *  Author: Damian Wójcik
  */ 
 
-#include "twi.h"
+#include "twi_master.h"
 #include <avr/power.h>
 #include "util/delay.h"
+#include <avr/power.h>
 
-//settings for TWCRn registers 
 volatile uint8_t twi0_twcr_settings = 0x0;
 
-#define TWI_startOperation()											REPLACE_REGISTER(TWCR0, BIT_MASK_OF(TWINT) WITH BIT_MASK_OF(TWEN))
-////setBitsAt(&TWCR,TWINT,TWEN)
+#define TWI_startOperation()											REPLACE_REGISTER(TWCR0, BIT_MASK_OF(TWINT) WITH BIT_MASK_OF(TWEN))				
 
-#define startElementaryOperation(operation_bit)							setBitsAt(&TWCR0,TWINT,TWEN,operation_bit)
-// REPLACE_REGISTER(TWCR,\
-BIT_MASK_OF(TWINT) WITH\
-BIT_MASK_OF(TWEN)  WITH\
-BIT_MASK_OF(operation_bit))
-//setBitsAt(&TWCR,TWINT,TWEN,operation_bit)
+#define startElementaryOperation(operation_bit)							REPLACE_REGISTER(TWCR0,BIT_MASK_OF(TWINT) WITH BIT_MASK_OF(TWEN)  WITH BIT_MASK_OF(operation_bit))
 
 #define TWI_sendToRegister(data)										REPLACE_REGISTER(TWDR0,data)
 #define TWI_receive()													TWDR0
-
-
-
 
 #define expectTWIStatus(expected_status,possible_twi_error)\
 		if(TW_STATUS != expected_status)\
@@ -76,28 +67,21 @@ static inline void _basicSetup(TWI_Setup* setup)
 	if(setup->generate_acknowledge_signal_)
 		SET_BIT_AT(TWCR0,TWEA);
 	if(setup->startup_enable_)
-		SET_BIT_AT(TWCR0,TWEN);twi0_twcr_settings;
-}
-
-//do wyjebania
-static inline void _setupPins()
-{
-	//DDRC = _BV(DDC5) | _BV(DDC4);
-	//setBitsAt(&DDRC,DDC5,DDC4);
+		SET_BIT_AT(TWCR0,TWEN);
+	
+	twi0_twcr_settings;
 }
 
 void TWI_init(TWI_Setup setup)
 {
-	power_twi_enable();
+	//power_twi_enable();
+	//PRR0 |= _BV(PRTWI0);
 	
 	_basicSetup(&setup);
 	
 	if(setup.use_standard_twi_speed_)
 		_setStandardSpeed(&setup);
 	else _setSpeed(setup.speed_);
-	
-	//do wyjebania ,ma byc zewnêtrzny R4.7
-	//_setupPins();
 	
 }
 
@@ -107,8 +91,6 @@ static inline void _startSequence_impl_()
 {
 	startElementaryOperation(TWSTA);
 	TWI_waitForOperationComplete();	
-	//new
-	//CLEAR_BIT_AT(TWCR,TWSTA);
 }
 
 void TWI_startSequence_ACK()
@@ -128,12 +110,14 @@ void TWI_repeatStartSequence()
 	TWI_waitForRepeatedStart_ACK();
 }
 
+#define LSB 0
+
 #define prepareAddressToSend(address)\
 		SHIFT_MASK_LEFT(address,1);
 
 #define prepareAddressToReceive(address)\
 		SHIFT_MASK_LEFT(address,1);\
-		SET_BIT_AT(address,0)
+		SET_BIT_AT(address,LSB)
 
 static inline void _sendAddress_impl(address_t address)
 {
@@ -218,6 +202,61 @@ void TWI_sendByte_NACK(byte_t byte)
 	TWI_MasterTransmitter_waitForByteSent_NACK();
 }
 
+//sending series of data
+
+void TWI_sendByteSeries_ACK(byte_t* bytes,length_t count)
+{
+	length_t array_idx = 0;
+	while(count--)
+	{
+		TWI_sendByte_ACK(bytes[array_idx]);
+		++array_idx;	
+	}
+}
+
+void TWI_sendByteSeries_NoACK(byte_t* bytes,length_t count)
+{
+	length_t array_idx = 0;
+	while(count--)
+	{
+		TWI_sendByte_NoACK(bytes[array_idx]);
+		++array_idx;
+	}
+}
+
+void TWI_sendByteSeries_NACK(byte_t* bytes,length_t count)
+{
+	length_t array_idx = 0;
+	while(count--)
+	{
+		TWI_sendByte_NACK(bytes[array_idx]);
+		++array_idx;
+	}
+}
+
+//sending text strings
+
+void TWI_sendText_ACK(char* text)
+{
+	while(*text)
+		TWI_sendByte_ACK(*text++);
+	TWI_sendByte_ACK(0);//end of string
+}
+
+void TWI_sendText_NoACK(char* text)
+{
+	while(*text)
+		TWI_sendByte_NoACK(*text++);
+	TWI_sendByte_NoACK(0);//end of string
+}
+
+void TWI_sendText_NACK(char* text)
+{
+	while(*text)
+		TWI_sendByte_NACK(*text++);
+	TWI_sendByte_NACK(0);//end of string
+}
+
 //receiving bytes
 
 inline static void _receiveByte_impl_()
@@ -252,8 +291,6 @@ void TWI_stopSequence()
 {
 	startElementaryOperation(TWSTO);
 	TWI_waitForStopBitSent();
-	//new
-	//CLEAR_BIT_AT(TWCR,TWSTO);
 }
 
 //more High level operations

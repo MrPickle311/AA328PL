@@ -397,6 +397,7 @@ volatile FILE usart_0_io_file;
 #define USART0_getchar()	   fgetc((FILE*)&usart_0_io_file)
 #define USART0_putchar(c)	   fputc(c, (FILE*)&usart_0_io_file)
 
+#define USART0_log(message)	   fprintf((FILE*)&usart_0_io_file, message)
 #define USART0_printf(fmt,...) fprintf((FILE*)&usart_0_io_file, fmt, __VA_ARGS__)
 #define USART0_scanf(fmt,...)  fscanf((FILE*)&usart_0_io_file, fmt, __VA_ARGS__)
 
@@ -411,6 +412,7 @@ volatile FILE usart_1_io_file;
 #define USART1_getchar()	    fgetc((FILE*)&usart_1_io_file)
 #define USART1_putchar(c)	    fputc(c,(FILE*)&usart_1_io_file)
 
+#define USART1_log(message)	   fprintf((FILE*)&usart_0_io_file, message)
 #define USART1_printf(fmt, ...) fprintf((FILE*)&usart_1_io_file, fmt, __VA_ARGS__)
 #define USART1_scanf(fmt, ...)  fscanf((FILE*)&usart_1_io_file, fmt, __VA_ARGS__)
 

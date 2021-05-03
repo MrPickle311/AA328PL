@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 //#include "i2c_lib.h"
-#include "../twi_master.h"
+#include "../twi.h"
 #include <stdlib.h>
 #include <util/delay.h>
 

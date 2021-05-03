@@ -45,8 +45,6 @@ volatile enum TWI_Error current_twi_error;
 
 //waiting for elementary operations
 
-#ifdef TWI_MASTER
-
 //Basic
 
 #define TWI_waitForOperationComplete()						 while (!(TWCR0 & _BV(TWINT)))
@@ -128,6 +126,22 @@ void TWI_sendByte_NoACK(byte_t byte);
 
 void TWI_sendByte_NACK(byte_t byte);
 
+//sending series of data
+
+void TWI_sendByteSeries_ACK(byte_t* byte,length_t count);
+
+void TWI_sendByteSeries_NoACK(byte_t* byte,length_t count);
+
+void TWI_sendByteSeries_NACK(byte_t* byte,length_t count);
+
+//sending text strings
+
+void TWI_sendText_ACK(char* text);
+
+void TWI_sendText_NoACK(char* text);
+
+void TWI_sendText_NACK(char* text);
+
 //receiving bytes
 
 byte_t TWI_receiveByte_NACK();
@@ -142,11 +156,9 @@ void TWI_stopSequence();
 
 //more High level operations
 
-
 void TWI_selectDeviceForSending(address_t address);
 
 void TWI_selectDeviceForReceiving(address_t address);
-
 
 void TWI_sendByteToDeviceRegister(address_t device_address,
 								  address_t register_address,
@@ -159,6 +171,6 @@ byte_t TWI_receiveByteFromDeviceRegister(address_t device_address,
 //recognize all TWI devices and saves their addresses into array
 void TWI_scanBus(address_t* adrresses,uint8_t expected_devices_nmbr);
 
-#endif //TWI_MASTER
+
 
 #endif /* TWI_H_ */
