@@ -47,44 +47,4 @@ length_t CircularBuffer_getCapacity(CircularBuffer buffer);
 //returns a current number of elements in a buffer
 length_t CircularBuffer_getFillLevel(CircularBuffer buffer);
 
-/*
-struct StaticQueue_struct
-{
-	byte_t current_pop_pos_;
-	byte_t current_push_pos_;
-	byte_t overdistance_;
-	byte_t size_;
-	byte_t* body_;
-};
-
-typedef struct StaticQueue_struct StaticQueue;
-
-void StaticQueue_init(StaticQueue* queue,uint8_t size);
-
-inline bool StaticQueue_isEmpty(StaticQueue* queue)
-{
-	return queue->current_push_pos_ == queue->current_pop_pos_
-		   &&
-		   queue->overdistance_ == 0;
-}
-
-void StaticQueue_pushByte(StaticQueue* queue,byte_t val);
-
-byte_t StaticQueue_popByte(StaticQueue* queue);
-
-//distance == number of chars which i can pop 
-inline byte_t StaticQueue_getDistance(StaticQueue* queue)
-{
-	return abs(queue->current_push_pos_ - queue->current_pop_pos_);
-}
-
-//return true if next push will overwrite a byte
-inline bool StaticQueue_nextPushWillOverwrite(StaticQueue* queue)
-{
-	return queue->overdistance_ != 0 
-		   &&
-		   queue->current_pop_pos_ == queue->current_push_pos_ + 1;
-}
-*/
-
 #endif /* STATIC_QUEUE_H_ */

@@ -60,14 +60,14 @@ void LCD_print(uint8_t addr, uint8_t data, uint8_t xpin)
 	splitted_data[2] = (data << 4)   | EN | xpin;
 	splitted_data[3] = (data << 4)   | xpin;
 	
-	TWI_selectDeviceForSending(addr);
+	TWI0_selectDeviceForSending(addr);
 	//I2C_sendStartAndSelect(addr | TW_WRITE);
 	
 	for(size_t i = 0; i < 4 ; ++i)
-		TWI_sendByte_ACK(splitted_data[i]);
+		TWI0_sendByte_ACK(splitted_data[i]);
 		//I2C_sendByte(splitted_data[i]);
 	
-	TWI_stopSequence();
+	TWI0_stopSequence();
 	//I2C_stop();
 	
 	_delay_ms(5);

@@ -221,7 +221,14 @@
  * TWSR, masked by TW_STATUS_MASK
  */
 #define TW0_STATUS		(TWSR0 & TW_STATUS_MASK)
+
+#ifdef _AVR_ATMEGA328PB_H_INCLUDED
+
 #define TW1_STATUS		(TWSR1 & TW_STATUS_MASK)
+
+#endif
+
+
 /*@}*/
 
 /**

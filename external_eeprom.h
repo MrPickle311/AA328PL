@@ -19,16 +19,16 @@ volatile uint8_t eeprom_new = 0b10100000;
 
 void EEPROM_sendAddress_withoutStop(address_t address)
 {
-	TWI_startSequence_NoACK();
-	TWI_sendDeviceAddressForSending_ACK(eeprom_basic_address);
-	TWI_sendByte_ACK(address);
+	TWI0_startSequence_NoACK();
+	TWI0_sendDeviceAddressForSending_ACK(eeprom_basic_address);
+	TWI0_sendByte_ACK(address);
 }
 
 void EEPROM_writeSingleByte(byte_t byte,address_t address)
 {
 	EEPROM_sendAddress_withoutStop(address);
-	TWI_sendByte_ACK(byte);
-	TWI_stopSequence();
+	TWI0_sendByte_ACK(byte);
+	TWI0_stopSequence();
 	_delay_ms(5);
 }
 
@@ -38,13 +38,13 @@ byte_t EEPROM_readByte(address_t address)
 	
 	EEPROM_sendAddress_withoutStop(address);
 	
-	TWI_stopSequence();
+	TWI0_stopSequence();
 	
-	TWI_startSequence_NoACK();
-	TWI_sendDeviceAddreessForReceiving_ACK(eeprom_basic_address);
-	data = TWI_receiveByte_NACK();
+	TWI0_startSequence_NoACK();
+	TWI0_sendDeviceAddreessForReceiving_ACK(eeprom_basic_address);
+	data = TWI0_receiveByte_NACK();
 	
-	TWI_stopSequence();
+	TWI0_stopSequence();
 	return data;
 }
 
@@ -54,11 +54,11 @@ void EEPROM_write8Bytes(byte_t* data,address_t start_address)
 	EEPROM_sendAddress_withoutStop(start_address);
 	for_N(i,8)
 	{
-		TWI_sendByte_ACK(data[i]);
+		TWI0_sendByte_ACK(data[i]);
 		_delay_ms(5);
 	}
 	
-	TWI_stopSequence();
+	TWI0_stopSequence();
 }
 
 void EEPROM_writeNBytes(byte_t* data,length_t size,address_t start_address)
@@ -77,17 +77,17 @@ byte_t* EEPROM_read8Bytes(address_t start_address)
 	
 	EEPROM_sendAddress_withoutStop(start_address);
 	
-	TWI_startSequence_NoACK();
-	TWI_sendDeviceAddreessForReceiving_ACK(eeprom_basic_address);
+	TWI0_startSequence_NoACK();
+	TWI0_sendDeviceAddreessForReceiving_ACK(eeprom_basic_address);
 	
 	for_N(i,8)
 	{
 		//if(i == 7)
-			data[i] = TWI_receiveByte_NACK();
+			data[i] = TWI0_receiveByte_NACK();
 		//else data[i] = TWI_receiveByte_ACK();
 	}
 	
-	TWI_stopSequence();
+	TWI0_stopSequence();
 	return data;
 }
 

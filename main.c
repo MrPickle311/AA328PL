@@ -203,12 +203,12 @@ int main()
 	sprintf(&lcd.bottom_line,"");
 	sprintf(&lcd.top_line,"");
 	
-	TWI_Setup setup = TWI_defaultSetup;
-	setup.generate_acknowledge_signal_ = true;
+	TWI_Master_Setup setup = TWI_Master_defaultSetup;
+	setup.startup_generate_acknowledge_signal_ = true;
 	setup.use_standard_twi_speed_ = true;
 	setup.standard_speed_ = TWI_100Kbps;
 	
-	TWI_init(setup);
+	TWI0_Master_init(setup);
 	
 	//PORT_setPinHigh(PORT_STATE(B),5);
 	//_delay_ms(1000);

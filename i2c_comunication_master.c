@@ -7,11 +7,11 @@ volatile uint16_t voltage;
 
 void setupTwi()
 {
-	TWI_Setup twi = TWI_defaultSetup;
+	TWI_Master_Setup twi = TWI_Master_defaultSetup;
 	twi.use_standard_twi_speed_ = true;
 	twi.startup_enable_ = true;
 	twi.standard_speed_ = TWI_100Kbps;
-	TWI_init(twi);
+	TWI0_Master_init(twi);
 }
 
 void twi_com_master_main()
@@ -20,26 +20,26 @@ void twi_com_master_main()
 	_delay_ms(1000);
 	setupTwi();
 	
-	TWI_selectDeviceForSending(SLAVE_ADDRESS);
-	TWI_sendByte_ACK('c');
-	TWI_stopSequence();
+	TWI0_selectDeviceForSending(SLAVE_ADDRESS);
+	TWI0_sendByte_ACK('c');
+	TWI0_stopSequence();
 	
-	TWI_selectDeviceForSending(SLAVE_ADDRESS);
-	TWI_sendByte_ACK('g');
-	TWI_sendByte_ACK(0);
-	TWI_sendByte_ACK(0);
-	TWI_stopSequence();
+	TWI0_selectDeviceForSending(SLAVE_ADDRESS);
+	TWI0_sendByte_ACK('g');
+	TWI0_sendByte_ACK(0);
+	TWI0_sendByte_ACK(0);
+	TWI0_stopSequence();
 	
-	TWI_selectDeviceForSending(SLAVE_ADDRESS);
-	TWI_sendByte_ACK('t');
-	TWI_sendText_ACK("Voltage:");
-	TWI_stopSequence();
+	TWI0_selectDeviceForSending(SLAVE_ADDRESS);
+	TWI0_sendByte_ACK('t');
+	TWI0_sendText_ACK("Voltage:");
+	TWI0_stopSequence();
 	
 	
 	
 	while(1)
 	{
-		TWI_selectDeviceForReceiving(SLAVE_ADDRESS);
-		voltage = TWI_receiveByte_ACK();
+		TWI0_selectDeviceForReceiving(SLAVE_ADDRESS);
+		voltage = TWI0_receiveByte_ACK();
 	}	
 }
